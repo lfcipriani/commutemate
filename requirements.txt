@@ -1,0 +1,8 @@
+gpxpy # https://github.com/tkrajina/gpxpy
+geopy # https://github.com/geopy/geopy
+
+# http://carsonfarmer.com/2013/07/essential-python-geo-libraries/
+# geoindex http://github.com/gusdan/geoindex
+
+# test
+nose
