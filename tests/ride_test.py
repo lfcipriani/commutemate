@@ -4,20 +4,21 @@ from commutemate.ride import *
 class TestGeoPoint:
 
     def test_geo_point_constructor(self):
-        p = GeoPoint(1,2,10,18)
+        p = GeoPoint(1,2,10,18,2)
         eq_(p.lat, 1)
 
     def test_available_attributes(self):
-        p = GeoPoint(1,2,10,18)
+        p = GeoPoint(1,2,10,18,2)
         eq_(p.lat, 1)
         eq_(p.lon, 2)
-        eq_(p.altitude, 10)
+        eq_(p.elevation, 10)
         eq_(p.speed, 18)
+        eq_(p.seconds_from_previous, 2)
 
 class TestRide:
 
     def test_add_point(self):
-        p = GeoPoint(1,2,10,18)
+        p = GeoPoint(1,2,10,18,2)
         r = Ride()
 
         eq_(r.point_count(), 0)

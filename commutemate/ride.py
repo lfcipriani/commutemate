@@ -1,10 +1,11 @@
 class GeoPoint(object):
 
-    def __init__(self, latitude, longitude, altitude, speed):
+    def __init__(self, latitude, longitude, elevation, speed, seconds_from_previous):
         self.lat = latitude
         self.lon = longitude
-        self.altitude = altitude
+        self.elevation = elevation
         self.speed = speed
+        self.seconds_from_previous = seconds_from_previous
 
 class Ride(object):
 
