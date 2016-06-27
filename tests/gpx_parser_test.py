@@ -18,4 +18,6 @@ class TestGpxParser:
         eq_(ride.point_count(), 919)
         ok_(ride.points[34].speed > 0)
         ok_(ride.points[34].seconds_from_previous > 0)
+        ok_(ride.points[0].speed == 0)
+        ok_(ride.points[0].seconds_from_previous == 0)
     
