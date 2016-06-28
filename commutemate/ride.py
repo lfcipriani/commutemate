@@ -8,6 +8,9 @@ class GeoPoint(object):
         self.seconds_from_previous = seconds_from_previous
         self.time = time
 
+    def __str__(self):
+        return "GeoPoint(lat=%3.7f, lon=%3.7f, speed=%2.6f kmh, secs_from_prev=%d, time=%s, elev=%d)" % (self.lat, self.lon, self.speed, self.seconds_from_previous, self.time, self.elevation)
+
 class Ride(object):
 
     def __init__(self, origin=None, destination=None):
