@@ -1,12 +1,14 @@
 from commutemate.ride import *
+from commutemate.roi import PointOfInterest
 
 STOPPED_SPEED_KMH_THRESHOLD = 1.5
 
 def detect_stops(ride):
-    stops       = []
-    on_a_stop   = False
-    duration    = 0
-    stop_buffer = None
+    stops         = []
+    on_a_stop     = False
+    duration      = 0
+    stop_buffer   = None
+    previous_stop = None
 
     for p in ride.points[1:]:
         if p.speed < STOPPED_SPEED_KMH_THRESHOLD:
@@ -15,11 +17,14 @@ def detect_stops(ride):
             stop_buffer = p
         else:
             if on_a_stop:
-                stops.append(stop_buffer)
-                # TODO save total duration
-                on_a_stop   = False
-                duration    = 0
-                stop_buffer = None
+                poi = PointOfInterest(stop_buffer, PointOfInterest.TYPE_STOP, ride.origin, ride.destination)
+                poi.set_duration(duration)
+                poi.set_previous_stop(previous_stop);
+                stops.append(poi)
 
-    # TODO create POI object instead
+                on_a_stop     = False
+                duration      = 0
+                stop_buffer   = None
+                previous_stop = poi
+
     return stops
