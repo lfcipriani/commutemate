@@ -28,7 +28,8 @@ class GpxParser(object):
                                      point.longitude, 
                                      point.elevation, 
                                      speed_kmh, 
-                                     gpxpy.utils.total_seconds(timedelta)))
+                                     gpxpy.utils.total_seconds(timedelta),
+                                     point.time))
 
         return ride
 
