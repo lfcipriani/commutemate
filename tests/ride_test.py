@@ -31,3 +31,22 @@ class TestRide:
         r = Ride()
 
         r.add_point(p)
+
+    def test_set_origin_and_destination(self):
+        origin      = GeoPoint(1,2,10,18,2)
+        destination = GeoPoint(3,4,10,18,2)
+        r = Ride()
+        r.set_origin(origin)
+        r.set_destination(destination)
+
+        eq_(r.origin.lat, 1)
+        eq_(r.destination.lat, 3)
+
+    def test_set_origin_and_destination_on_the_constructor(self):
+        origin      = GeoPoint(1,2,10,18,2)
+        destination = GeoPoint(3,4,10,18,2)
+        r = Ride(origin, destination)
+
+        eq_(r.origin.lat, 1)
+        eq_(r.destination.lat, 3)
+        

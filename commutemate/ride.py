@@ -9,8 +9,12 @@ class GeoPoint(object):
 
 class Ride(object):
 
-    def __init__(self):
+    def __init__(self, origin=None, destination=None):
         self.points = []
+        if origin:
+            self.set_origin(origin)
+        if destination:
+            self.set_destination(destination)
 
     def add_point(self, geo_point):
         if isinstance(geo_point, GeoPoint):
@@ -20,6 +24,12 @@ class Ride(object):
 
     def point_count(self):
         return len(self.points)
+
+    def set_origin(self, origin):
+        self.origin = origin
+
+    def set_destination(self, destination):
+        self.destination = destination
 
 class RideError(Exception):
     def __init__(self, value):
