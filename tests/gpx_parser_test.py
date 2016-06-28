@@ -15,7 +15,7 @@ class TestGpxParser:
         gp = GpxParser('tests/data/sample_with_stop.gpx')
         ride = gp.get_ride_from_track()
 
-        eq_(ride.point_count(), 919)
+        eq_(ride.point_count(), 292)
         ok_(ride.points[34].speed > 0)
         ok_(ride.points[34].seconds_from_previous > 0)
         ok_(ride.points[0].speed == 0)
