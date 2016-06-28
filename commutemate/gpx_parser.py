@@ -22,8 +22,8 @@ class GpxParser(object):
                     point    = points[i]
 
                     timedelta = point.time - previous.time
-                    distance  = self.__distance(point, previous)
-                    speed_kmh = self.__speed(distance, timedelta)
+                    distance  = geo_distance(point, previous)
+                    speed_kmh = geo_speed(distance, timedelta)
 
                     ride.add_point(
                             GeoPoint(point.latitude, 
@@ -35,17 +35,17 @@ class GpxParser(object):
 
         return ride
 
-    def __distance(self, point, previous):
-        if point.elevation and previous.elevation:
-            distance = point.distance_3d(previous)
-        else:
-            distance = point.distance_2d(previous)
-        return distance
+def geo_distance(point, previous):
+    if point.elevation and previous.elevation:
+        distance = gpxpy.geo.distance(point.latitude, point.longitude, point.elevation, previous.latitude, previous.longitude, previous.elevation)
+    else:
+        distance = gpxpy.geo.distance(point.latitude, point.longitude, None, previous.latitude, previous.longitude, None)
+    return distance
 
-    def __speed(self, distance, timedelta):
-        seconds = gpxpy.utils.total_seconds(timedelta)
-        speed_kmh = 0
-        if seconds > 0:
-            speed_kmh = (distance / 1000.) / (seconds / 60. ** 2)
-        return speed_kmh
+def geo_speed(distance, timedelta):
+    seconds = gpxpy.utils.total_seconds(timedelta)
+    speed_kmh = 0
+    if seconds > 0:
+        speed_kmh = (distance / 1000.) / (seconds / 60. ** 2)
+    return speed_kmh
         

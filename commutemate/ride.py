@@ -1,8 +1,8 @@
 class GeoPoint(object):
 
     def __init__(self, latitude, longitude, elevation, speed, seconds_from_previous, time):
-        self.lat = latitude
-        self.lon = longitude
+        self.lat = self.latitude = latitude
+        self.lon = self.longitude = longitude
         self.elevation = elevation
         self.speed = speed
         self.seconds_from_previous = seconds_from_previous
