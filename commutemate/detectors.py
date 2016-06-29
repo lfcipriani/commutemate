@@ -19,7 +19,7 @@ def detect_stops(ride):
             if on_a_stop:
                 poi = PointOfInterest(stop_buffer, PointOfInterest.TYPE_STOP, ride.origin, ride.destination)
                 poi.set_duration(duration)
-                poi.set_previous_stop(previous_stop);
+                poi.set_previous_stop(previous_stop)
                 stops.append(poi)
 
                 on_a_stop     = False

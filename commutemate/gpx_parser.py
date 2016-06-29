@@ -10,8 +10,10 @@ class GpxParser(object):
     def get_ride_from_track(self):
         previous_point = None
         ride = Ride()
-        ride.set_origin(self.__gpx.tracks[0].segments[0].points[0])
-        ride.set_destination(self.__gpx.tracks[-1].segments[-1].points[-1])
+        orig = self.__gpx.tracks[0].segments[0].points[0]
+        dest = self.__gpx.tracks[-1].segments[-1].points[-1] 
+        ride.set_origin(GeoPoint(orig.latitude, orig.longitude, orig.elevation, 0, 0, orig.time))
+        ride.set_destination(GeoPoint(dest.latitude, dest.longitude, dest.elevation, 0, 0, dest.time))
 
         for track in self.__gpx.tracks:
             for segment in track.segments:
