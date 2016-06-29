@@ -10,8 +10,7 @@ class TestDetectors:
         stop_POIs = detect_stops(ride)
 
         eq_(len(stop_POIs),4)
-        eq_(stop_POIs[0].type, PointOfInterest.TYPE_STOP)
+        eq_(stop_POIs[0].poi_type, PointOfInterest.TYPE_STOP)
         eq_(stop_POIs[0].previous_stop, None)
-        eq_(stop_POIs[1].previous_stop.duration, stop_POIs[0].duration)
         eq_(stop_POIs[2].origin, ride.origin)
 

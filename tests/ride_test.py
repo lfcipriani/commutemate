@@ -18,6 +18,19 @@ class TestGeoPoint:
         eq_(p.seconds_from_previous, 2)
         eq_(p.time, today)
 
+    def test_geo_point_json_serialization(self):
+        today = datetime(2016,04,20,12,13,14)
+        p1 = GeoPoint(1,2,10,18.123,2,today)
+        js = p1.to_JSON()
+        p2 = GeoPoint.from_JSON(js)
+
+        eq_(p2.lat, 1)
+        eq_(p2.lon, 2)
+        eq_(p2.elevation, 10)
+        eq_(p2.speed, 18.123)
+        eq_(p2.seconds_from_previous, 2)
+        eq_(p2.time, today)
+
 class TestRide:
 
     def test_add_point(self):
@@ -53,3 +66,15 @@ class TestRide:
         eq_(r.origin.lat, 1)
         eq_(r.destination.lat, 3)
         
+    def test_ride_json_serialization(self):
+        origin      = GeoPoint(1,2,10,18,2,datetime.today())
+        destination = GeoPoint(3,4,10,18,2,datetime.today())
+        r = Ride(origin, destination)
+        r.add_point(origin)
+        r.add_point(destination)
+        js = r.to_JSON()
+        r1 = Ride.from_JSON(js)
+
+        eq_(r1.origin.lat, 1)
+        eq_(r1.destination.lat, 3)
+        eq_(r1.point_count(), 2)
