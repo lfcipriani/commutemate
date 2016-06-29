@@ -11,7 +11,7 @@ class TestPOI:
 
         eq_(int(stop_POIs[2].speed_since_previous_stop), 18)
         eq_(stop_POIs[2].duration, 19)
-        eq_(stop_POIs[2].previous_stop, 736062)
+        eq_(stop_POIs[2].previous_stop, 'ce41ef2b46075724919fa8b6579dd144')
         eq_(stop_POIs[2].poi_type, PointOfInterest.TYPE_STOP)
 
     def test_poi_json_serialization(self):
@@ -22,5 +22,5 @@ class TestPOI:
 
         eq_(int(stop_POI.speed_since_previous_stop), 18)
         eq_(stop_POI.duration, 19)
-        eq_(stop_POI.previous_stop, 736062)
+        eq_(stop_POI.previous_stop, 'ce41ef2b46075724919fa8b6579dd144')
         eq_(stop_POI.poi_type, PointOfInterest.TYPE_STOP)

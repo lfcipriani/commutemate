@@ -1,4 +1,5 @@
 import json
+import hashlib
 from commutemate.ride import GeoPoint
 from commutemate.gpx_parser import geo_distance, geo_speed
 
@@ -18,8 +19,11 @@ class PointOfInterest(object):
         self.__generate_id()
 
     def __generate_id(self):
-        # TODO implement better id
-        self.id = self.point.time.toordinal()
+        md5 = hashlib.md5()
+        md5.update(self.point.time.__str__())
+        md5.update(self.point.lat.__str__())
+        md5.update(self.point.lon.__str__())
+        self.id = md5.hexdigest()
 
     def set_duration(self, duration):
         self.duration = duration
@@ -51,7 +55,6 @@ class PointOfInterest(object):
 
     @staticmethod
     def from_dict(json_dict):
-        print(json_dict)
         poi = PointOfInterest(
                     GeoPoint.from_dict(json_dict["point"]), 
                     json_dict["poi_type"],
