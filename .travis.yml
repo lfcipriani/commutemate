@@ -6,6 +6,7 @@ addons:
 python:
   - "2.7"
 # command to install dependencies
-install: make init
+install: pip install -r requirements-travis.txt
+
 # command to run tests
 script: make test

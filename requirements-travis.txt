@@ -1,0 +1,5 @@
+# needed to do that because didn't find
+# a way to install scikit-learn 0.17.0 with travis
+# apt package available is too old
+gpxpy
+nose
