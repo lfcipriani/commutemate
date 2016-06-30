@@ -2,7 +2,10 @@ test:
 	nosetests tests/
 
 init:
-	pip install -r requirements.txt
+	pip install -e .[test]
+
+cleanpyc:
+	find . -name '*.pyc' -delete
 
 clean:
-	find . -name '*.pyc' -delete
+	python setup.py clean
