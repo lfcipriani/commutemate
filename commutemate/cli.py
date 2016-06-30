@@ -8,17 +8,25 @@ class CommutemateCLI(object):
     
     def __init__(self):
         l.basicConfig(stream=sys.stdout, level=l.DEBUG, format='%(asctime)s(%(levelname)s) - %(message)s')
+        commands = ['detectstops','clusterize']
 
         # Parsing commend line arguments
-        parser = OptionParser("usage: %prog -i FOLDER -o FOLDER")
+        parser = OptionParser("usage: %prog COMMAND -i FOLDER -o FOLDER" + 
+                              "\nAvailable COMMANDs: %s" % ", ".join(commands))
         parser.add_option("-i", "--input", dest="folder", action="store",
-                        help="input folder with GPX files")
+                        help="input folder with GPX files (detectstops) or json (clusterize)")
         parser.add_option("-o", "--output",
                         action="store", dest="output_folder", metavar="FOLDER", 
                         help="folder to save the output json files")
         (options, args) = parser.parse_args()
 
         # Validating arguments
+        try:
+            commands.index(args[0])
+        except:
+            parser.error("invalid command: %s. Try running with -h for help" % args[0])
+        command = args[0]
+
         if not options.folder or not options.output_folder:
             parser.error("input and output folders required")
 
@@ -31,7 +39,9 @@ class CommutemateCLI(object):
         if not os.path.isdir(self.output_folder):
             os.makedirs(self.output_folder)
 
-    def execute(self):
+        getattr(self,command)()
+
+    def detectstops(self):
         # Getting all gpx files in specified folder
         gpx_files = []
         for f in os.listdir(self.input_folder):
@@ -62,7 +72,7 @@ class CommutemateCLI(object):
         outputFile.close()
 
 def main():
-    CommutemateCLI().execute()
+    CommutemateCLI()
 
 if __name__ == "__main__":
     main()
