@@ -7,6 +7,9 @@ sys.path.append(d)
 from optparse import OptionParser
 from commutemate.gpx_parser import GpxParser
 
+def get_path(folder):
+    return os.path.abspath(os.path.join(os.getcwd(), folder))
+
 # Parsing commend line arguments
 parser = OptionParser("usage: %prog -i FOLDER -o FOLDER")
 parser.add_option("-i", "--input", dest="folder", action="store",
@@ -20,14 +23,20 @@ parser.add_option("-o", "--output",
 if not options.folder or not options.output_folder:
     parser.error("input and output folders required")
 
+input_folder = get_path(options.folder)
+output_folder = get_path(options.output_folder)
+
+if not os.path.isdir(input_folder):
+    parser.error("input folder does not exist")
+
+if not os.path.isdir(output_folder):
+    os.makedirs(output_folder)
+
 # Getting all gpx files in specified folder
 gpx_files = []
-for f in os.listdir(options.folder):
+for f in os.listdir(input_folder):
     if f.endswith('.gpx'):
-        gpx_files.append(os.path.abspath(
-                os.path.join(
-                    os.getcwd(), 
-                    options.folder, 
-                    f)))
+        gpx_files.append(os.path.join(input_folder, f))
 
+print(gpx_files[0])
 # TODO do something with the files :-)
