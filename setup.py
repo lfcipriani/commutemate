@@ -25,7 +25,7 @@ setup(
     ],
     keywords='gpx data geo commute ride',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    install_requires=['gpxpy', 'numpy', 'scipy', 'scikit-learn'],
+    install_requires=['gpxpy', 'numpy', 'scipy', 'scikit-learn', 'gmplot'],
     extras_require={
         'test': ['nose'],
     },
