@@ -4,6 +4,7 @@ from optparse import OptionParser
 from commutemate.gpx_parser import GpxParser
 from commutemate.detectors import *
 from commutemate.roi import *
+import commutemate.utils as utils
 
 class CommutemateCLI(object):
     
@@ -31,8 +32,8 @@ class CommutemateCLI(object):
         if not options.folder or not options.output_folder:
             parser.error("input and output folders required")
 
-        self.input_folder = self.__get_path(options.folder)
-        self.output_folder = self.__get_path(options.output_folder)
+        self.input_folder = utils.full_path(options.folder)
+        self.output_folder = utils.full_path(options.output_folder)
 
         if not os.path.isdir(self.input_folder):
             parser.error("input folder does not exist")
@@ -60,7 +61,7 @@ class CommutemateCLI(object):
             total += stop_count
             l.info("%s: %d stop(s) detected" % (os.path.basename(gpx), stop_count))
             for s in stops:
-                self.__save_json(os.path.join(self.output_folder, "poi_%s.json" % s.id), s.to_JSON())
+                utils.save_json(os.path.join(self.output_folder, "poi_%s.json" % s.id), s.to_JSON())
 
         l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.output_folder))
 
@@ -78,7 +79,7 @@ class CommutemateCLI(object):
         # Preparing data
         geo_coords = []
         for jsf in json_files:
-            poi = self.__load_json(jsf, PointOfInterest)
+            poi = utils.load_json(jsf, PointOfInterest)
             geo_coords.append([poi.point.lat, poi.point.lon])
         X = numpy.array(geo_coords)
         Y = numpy.radians(X) # this is the input of scikit Haversine distance formula
@@ -101,22 +102,6 @@ class CommutemateCLI(object):
         print(db.labels_)
         print(len(db.core_sample_indices_))
         print(len(db.components_))
-
-    def __get_path(self, folder):
-        return os.path.abspath(os.path.join(os.getcwd(), folder))
-
-    def __save_json(self, filename, content):
-        outputFile = open(filename, "w")
-        outputFile.write(content)
-        outputFile.close()
-
-    def __load_json(self, filename, class_to_deserialize=None):
-        f  = open(filename, "r")
-        js = f.read()
-        if class_to_deserialize:
-            js = class_to_deserialize.from_JSON(js)
-        f.close()
-        return js
 
 def main():
     CommutemateCLI()

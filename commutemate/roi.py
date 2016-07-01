@@ -1,7 +1,7 @@
 import json
 import hashlib
 from commutemate.ride import GeoPoint
-from commutemate.gpx_parser import geo_distance, geo_speed
+import commutemate.utils as utils
 
 class PointOfInterest(object):
 
@@ -31,9 +31,9 @@ class PointOfInterest(object):
     def set_previous_stop(self, poi):
         if poi != None:
             timedelta = self.point.time - poi.point.time
-            distance  = geo_distance(self.point, poi.point)
+            distance  = utils.geo_distance(self.point, poi.point)
 
-            self.speed_since_previous_stop = geo_speed(distance, timedelta)
+            self.speed_since_previous_stop = utils.geo_speed(distance, timedelta)
 
         self.previous_stop = poi.id if poi else None
 
