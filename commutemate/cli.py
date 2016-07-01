@@ -55,6 +55,7 @@ class CommutemateCLI(object):
         total = 0
         for gpx in gpx_files:
             ride  = GpxParser(gpx).get_ride_from_track()
+
             stops = detect_stops(ride)
 
             stop_count = len(stops)
@@ -68,7 +69,7 @@ class CommutemateCLI(object):
     def clusterize(self):
         import numpy
         from sklearn.cluster import DBSCAN
-        from scipy.spatial.distance import pdist, squareform
+
         # Getting all json files in specified folder
         json_files = []
         for f in os.listdir(self.input_folder):
@@ -78,30 +79,53 @@ class CommutemateCLI(object):
 
         # Preparing data
         geo_coords = []
+        POIs = []
         for jsf in json_files:
             poi = utils.load_json(jsf, PointOfInterest)
+            POIs.append(poi)
             geo_coords.append([poi.point.lat, poi.point.lon])
         X = numpy.array(geo_coords)
         Y = numpy.radians(X) # this is the input of scikit Haversine distance formula
 
         # Running DBSCAN cluster algorithm
         # http://scikit-learn.org/stable/modules/clustering.html#dbscan
-        DB_EPS = 0.005 / 6372 # Haversine outputs without considering Earth radius
-        DB_MIN_SAMPLES = 5
+        DB_METERS      = 7. #  for eps, as float
+        DB_MIN_SAMPLES = 4
+
+        DB_EPS = DB_METERS / 1000 / 6372 # Haversine outputs without considering Earth radius
         DB_METRIC = 'haversine'
-        l.info("Running DBSCAN with eps=%0.15f, min_samples=%d, metric=%s" % (DB_EPS, DB_MIN_SAMPLES, DB_METRIC))
+        l.info("Running DBSCAN with eps=%d meters, min_samples=%d, metric=%s" % (DB_METERS, DB_MIN_SAMPLES, DB_METRIC))
 
         db = DBSCAN(eps=DB_EPS, min_samples=DB_MIN_SAMPLES, metric=DB_METRIC).fit(Y)
 
         l.info("Done!")
 
-        labels = db.labels_
-        n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-        l.info('Estimated number of clusters: %d' % n_clusters)
+        l.info("Rendering visualization")
+        core_samples_mask = numpy.zeros_like(db.labels_, dtype=bool)
+        core_samples_mask[db.core_sample_indices_] = True # array of true/false, true for core sample, false otherwise
 
-        print(db.labels_)
-        print(len(db.core_sample_indices_))
-        print(len(db.components_))
+        labels = db.labels_
+        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+
+        import gmplot
+        gmap = gmplot.GoogleMapPlotter(52.52732, 13.41766, 12)
+
+        black  = '#000000' # noise
+        blue   = '#31ABD4' # non-core values
+        red    = '#C93660' # core values
+        unique_labels = set(labels)
+        for k in unique_labels:
+            class_member_mask = (labels == k) # array of true/false. true if label equal set of label value
+
+            xy = X[class_member_mask & core_samples_mask]
+            gmap.scatter(xy[:, 0], xy[:, 1], red, size=int(DB_METERS), marker=False)
+
+            xy = X[class_member_mask & ~core_samples_mask]
+            gmap.scatter(xy[:, 0], xy[:, 1], black if k == -1 else blue, size=int(DB_METERS), marker=False)
+
+        o = os.path.join(self.output_folder,"map.html")
+        gmap.draw(o)
+        l.info("Done! There is %d regions of interest detected\nThe map visualization is available at %s" % (n_clusters_, o))
 
 def main():
     CommutemateCLI()
