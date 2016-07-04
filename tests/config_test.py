@@ -21,3 +21,10 @@ class TestConfig:
         c = Config('tests/data/config_test_no_ignore.ini')
 
         eq_(len(c.region_ignores), 0)
+
+    def test_default_config(self):
+        c = Config()
+
+        eq_(len(c.region_ignores), 0)
+        eq_(c.dbscan_eps_in_meters, 7)
+        eq_(c.dbscan_min_samples, 4)

@@ -14,7 +14,7 @@ class CommutemateCLI(object):
         commands = ['detectstops','clusterize']
 
         # Parsing commend line arguments
-        parser = OptionParser("usage: %prog COMMAND -i FOLDER -o FOLDER -c CONFIG.INI" + 
+        parser = OptionParser("usage: %prog COMMAND -i FOLDER -o FOLDER [-c CONFIG.INI]" + 
                               "\nAvailable COMMANDs: %s" % ", ".join(commands))
         parser.add_option("-i", "--input", dest="folder", action="store",
                         help="input folder with GPX files (detectstops) or json (clusterize)")
@@ -23,7 +23,7 @@ class CommutemateCLI(object):
                         help="folder to save the output json files")
         parser.add_option("-c", "--config",
                         action="store", dest="config", 
-                        help="config file")
+                        help="config file (optional)")
         (options, args) = parser.parse_args()
 
         # Validating arguments
@@ -33,20 +33,25 @@ class CommutemateCLI(object):
             parser.error("invalid command: %s. Try running with -h for help" % args[0])
         command = args[0]
 
-        if not options.folder or not options.output_folder or not options.config:
+        if not options.folder or not options.output_folder:
             parser.error("config, input and output folders required")
 
         self.input_folder = utils.full_path(options.folder)
         self.output_folder = utils.full_path(options.output_folder)
-        self.config = utils.full_path(options.config)
+
+        if not options.config:
+            self.config = Config()
+        else:
+            self.config = utils.full_path(options.config)
+            if not os.path.exists(self.config):
+                parser.error("specified config file does not exist")
+            else:
+                self.config = Config(self.config)
+
+        l.info(self.config.__str__())
 
         if not os.path.isdir(self.input_folder):
             parser.error("input folder does not exist")
-
-        if not os.path.exists(self.config):
-            parser.error("specified config file does not exist")
-        else:
-            self.config = Config(self.config)
 
         if not os.path.isdir(self.output_folder):
             os.makedirs(self.output_folder)
@@ -99,8 +104,8 @@ class CommutemateCLI(object):
 
         # Running DBSCAN cluster algorithm
         # http://scikit-learn.org/stable/modules/clustering.html#dbscan
-        DB_METERS      = 7. #  for eps, as float
-        DB_MIN_SAMPLES = 4
+        DB_METERS      = self.config.dbscan_eps_in_meters #  for eps, as float
+        DB_MIN_SAMPLES = self.config.dbscan_min_samples
 
         DB_EPS = DB_METERS / 1000 / 6372 # Haversine outputs without considering Earth radius
         DB_METRIC = 'haversine'
