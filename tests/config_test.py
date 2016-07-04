@@ -17,3 +17,7 @@ class TestConfig:
         eq_(c.dbscan_eps_in_meters, 7)
         eq_(c.dbscan_min_samples, 4)
 
+    def test_empty_region_ignores(self):
+        c = Config('tests/data/config_test_no_ignore.ini')
+
+        eq_(len(c.region_ignores), 0)

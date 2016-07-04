@@ -1,6 +1,7 @@
 import sys, os
 import logging as l
 from optparse import OptionParser
+from commutemate.config import Config
 from commutemate.gpx_parser import GpxParser
 from commutemate.detectors import *
 from commutemate.roi import *
@@ -13,13 +14,16 @@ class CommutemateCLI(object):
         commands = ['detectstops','clusterize']
 
         # Parsing commend line arguments
-        parser = OptionParser("usage: %prog COMMAND -i FOLDER -o FOLDER" + 
+        parser = OptionParser("usage: %prog COMMAND -i FOLDER -o FOLDER -c CONFIG.INI" + 
                               "\nAvailable COMMANDs: %s" % ", ".join(commands))
         parser.add_option("-i", "--input", dest="folder", action="store",
                         help="input folder with GPX files (detectstops) or json (clusterize)")
         parser.add_option("-o", "--output",
                         action="store", dest="output_folder", metavar="FOLDER", 
                         help="folder to save the output json files")
+        parser.add_option("-c", "--config",
+                        action="store", dest="config", 
+                        help="config file")
         (options, args) = parser.parse_args()
 
         # Validating arguments
@@ -29,14 +33,20 @@ class CommutemateCLI(object):
             parser.error("invalid command: %s. Try running with -h for help" % args[0])
         command = args[0]
 
-        if not options.folder or not options.output_folder:
-            parser.error("input and output folders required")
+        if not options.folder or not options.output_folder or not options.config:
+            parser.error("config, input and output folders required")
 
         self.input_folder = utils.full_path(options.folder)
         self.output_folder = utils.full_path(options.output_folder)
+        self.config = utils.full_path(options.config)
 
         if not os.path.isdir(self.input_folder):
             parser.error("input folder does not exist")
+
+        if not os.path.exists(self.config):
+            parser.error("specified config file does not exist")
+        else:
+            self.config = Config(self.config)
 
         if not os.path.isdir(self.output_folder):
             os.makedirs(self.output_folder)
@@ -54,7 +64,7 @@ class CommutemateCLI(object):
         # Detecting Stops and storing Points of Interest
         total = 0
         for gpx in gpx_files:
-            ride  = GpxParser(gpx).get_ride_from_track()
+            ride  = GpxParser(gpx).get_ride_from_track(self.config.region_ignores)
 
             stops = detect_stops(ride)
 
