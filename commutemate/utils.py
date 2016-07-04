@@ -16,6 +16,10 @@ def geo_speed(distance, timedelta):
         speed_kmh = (distance / 1000.) / (seconds / 60. ** 2)
     return speed_kmh
 
+def is_inside_range(range_, geopoint):
+    distance = gpxpy.geo.distance(range_[0], range_[1], None, geopoint.latitude, geopoint.longitude, None)
+    return (distance <= range_[2])
+
 # FILE utils
 def full_path(folder):
     return os.path.abspath(os.path.join(os.getcwd(), folder))
@@ -32,3 +36,4 @@ def load_json(filename, class_to_deserialize=None):
         js = class_to_deserialize.from_JSON(js)
     f.close()
     return js
+

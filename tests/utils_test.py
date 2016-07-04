@@ -1,5 +1,6 @@
 from nose.tools import *
 import os
+from datetime import datetime
 from commutemate.gpx_parser import GpxParser
 from commutemate.ride import GeoPoint
 import commutemate.utils as utils
@@ -21,6 +22,14 @@ class TestUtils:
         distance = utils.geo_distance(p2, p1)
 
         eq_(int(utils.geo_speed(distance, timedelta)),22)
+
+    def test_is_inside_range(self):
+        inside  = GeoPoint(47.558094,10.749937,10,18,2,datetime.today())
+        outside = GeoPoint(47.560451,10.748338,10,18,2,datetime.today())
+        range_  = (47.557729, 10.750323, 200)
+
+        ok_(utils.is_inside_range(range_, inside))
+        ok_(not utils.is_inside_range(range_, outside))
 
     def test_full_path(self):
         cwd = os.getcwd()
