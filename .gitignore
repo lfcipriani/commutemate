@@ -1,6 +1,7 @@
 # project specific
 data/gpx/*
 data/output/*
+config.ini
 
 # python related
 # Byte-compiled / optimized / DLL files
