@@ -94,16 +94,17 @@ class RegionOfInterest(object):
         self.set_poi_ids([p.id for p in poi_list], type_)
         self.set_poi_coords([[p.point.lat, p.point.lon] for p in poi_list], type_)
 
+    def calculate_center_range(self):
+        self.center_range = utils.geo_range_from_center(self.get_all_poi_coords())
+
+    def get_all_poi_coords(self):
+        return self.poi_coords[RegionOfInterest.CORE] + self.poi_coords[RegionOfInterest.NON_CORE]
+
     def set_poi_ids(self, poi_ids, type_):
         self.poi_ids[type_] = poi_ids
 
     def set_poi_coords(self, poi_coords, type_):
         self.poi_coords[type_] = poi_coords
-        if type_ == RegionOfInterest.CORE:
-            self.__generate_center_range(poi_coords)
-        
-    def __generate_center_range(self, coords):
-        self.center_range = utils.geo_range_from_center(coords)
 
     def to_dict(self):
         js = {
