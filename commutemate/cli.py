@@ -1,10 +1,11 @@
 import sys, os
+import datetime
 import logging as l
 from optparse import OptionParser
+from commutemate.roi import PointOfInterest, RegionOfInterest
 from commutemate.config import Config
 from commutemate.gpx_parser import GpxParser
-from commutemate.detectors import *
-from commutemate.roi import *
+from commutemate.detectors import detect_stops
 import commutemate.utils as utils
 
 class CommutemateCLI(object):
@@ -88,7 +89,7 @@ class CommutemateCLI(object):
         # Getting all json files in specified folder
         json_files = []
         for f in os.listdir(self.input_folder):
-            if f.endswith('.json'):
+            if os.path.basename(f).startswith("poi_") and f.endswith('.json'):
                 json_files.append(os.path.join(self.input_folder, f))
         l.info("There's %d POI(s) to be clusterized. Preparing data..." % len(json_files))
 
@@ -99,6 +100,7 @@ class CommutemateCLI(object):
             poi = utils.load_json(jsf, PointOfInterest)
             POIs.append(poi)
             geo_coords.append([poi.point.lat, poi.point.lon])
+        POIs = numpy.array(POIs)
         X = numpy.array(geo_coords)
         Y = numpy.radians(X) # this is the input of scikit Haversine distance formula
 
@@ -114,14 +116,42 @@ class CommutemateCLI(object):
         db = DBSCAN(eps=DB_EPS, min_samples=DB_MIN_SAMPLES, metric=DB_METRIC).fit(Y)
 
         l.info("Done!")
+        l.info("Creating regions of interest")
 
-        l.info("Rendering visualization")
         core_samples_mask = numpy.zeros_like(db.labels_, dtype=bool)
         core_samples_mask[db.core_sample_indices_] = True # array of true/false, true for core sample, false otherwise
 
         labels = db.labels_
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
+        ROIs = []
+        roi_labels = set(labels) - set([-1])
+        l.info("ROI: center=[lat,lon] range=in meters POIs=[total] ([core] + [non core])")
+        for k in roi_labels:
+            roi_ = RegionOfInterest()
+
+            class_member_mask = (labels == k)
+            core     = POIs[class_member_mask & core_samples_mask]
+            non_core = POIs[class_member_mask & ~core_samples_mask]
+
+            roi_.set_poi_list(core.tolist(), RegionOfInterest.CORE)
+            roi_.set_poi_list(non_core.tolist(), RegionOfInterest.NON_CORE)
+            roi_.calculate_center_range()
+
+            l.info("ROI: center=[%3.7f,%3.7f] range=%2.3f meters POIs=%d (%d + %d)" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(core) + len(non_core), len(core), len(non_core)))
+            ROIs.append(roi_)
+
+        now = datetime.datetime.today().strftime("%Y%m%d_%H%M%S")
+        i   = 1
+        roi_count = len(ROIs)
+        for roi_ in ROIs:
+            utils.save_json(os.path.join(self.output_folder, ("roi_%s_%0"+ str(len(str(roi_count))) + "d.json") % (now, i)), roi_.to_JSON())
+            i += 1
+
+        l.info("Done! There was %d regions of interest detected\nThe data is available at %s" % (len(ROIs), self.output_folder))
+
+        # Rendering map
+        l.info("Rendering visualization")
         import gmplot
         gmap = gmplot.GoogleMapPlotter(52.52732, 13.41766, 12)
 
