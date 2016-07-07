@@ -94,8 +94,10 @@ class RegionOfInterest(object):
         self.set_poi_ids([p.id for p in poi_list], type_)
         self.set_poi_coords([[p.point.lat, p.point.lon] for p in poi_list], type_)
 
-    def calculate_center_range(self):
-        self.center_range = utils.geo_range_from_center(self.get_all_poi_coords())
+    def calculate_center_range(self, additional=0):
+        rg = utils.geo_range_from_center(self.get_all_poi_coords())
+        meters = rg[2] + additional
+        self.center_range = (rg[0], rg[1], meters)
 
     def get_all_poi_coords(self):
         return self.poi_coords[RegionOfInterest.CORE] + self.poi_coords[RegionOfInterest.NON_CORE]

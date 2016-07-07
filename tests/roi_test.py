@@ -38,9 +38,9 @@ class TestROI:
         ok_(not roi.poi_list[RegionOfInterest.CORE])
         
         RegionOfInterest.hydrate_POIs(roi, 'tests/data/')
-        roi.calculate_center_range()
+        roi.calculate_center_range(11)
 
-        eq_(int(roi.center_range[2]), 1949)
+        eq_(int(roi.center_range[2]), 1960)
         eq_(type(roi.poi_list[RegionOfInterest.CORE][0]), PointOfInterest)
         eq_(len(roi.poi_list[RegionOfInterest.CORE]), 3)
         eq_(len(roi.poi_list[RegionOfInterest.NON_CORE]), 1)

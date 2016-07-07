@@ -136,7 +136,7 @@ class CommutemateCLI(object):
 
             roi_.set_poi_list(core.tolist(), RegionOfInterest.CORE)
             roi_.set_poi_list(non_core.tolist(), RegionOfInterest.NON_CORE)
-            roi_.calculate_center_range()
+            roi_.calculate_center_range(DB_METERS)
 
             l.info("ROI: center=[%3.7f,%3.7f] range=%2.3f meters POIs=%d (%d + %d)" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(core) + len(non_core), len(core), len(non_core)))
             ROIs.append(roi_)
