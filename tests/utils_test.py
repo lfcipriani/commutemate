@@ -32,6 +32,15 @@ class TestUtils:
         ok_(not utils.is_inside_range(range_, outside))
 
     def test_geo_range_from_center(self):
+        b00 = [(0, 0),(1, 0)]
+        b45 = [(0, 0),(1, 1)]
+        b90 = [(0, 0),(0, 1)]
+
+        eq_(round(utils.geo_bearing(b00[0], b00[1])), 0)
+        eq_(round(utils.geo_bearing(b45[0], b45[1])), 45)
+        eq_(round(utils.geo_bearing(b90[0], b90[1])), 90)
+
+    def test_geo_beariring(self):
         points = [[-22.007023, -47.895010],[-22.007600, -47.894592],[-22.007608, -47.895222],[-22.006996, -47.894444],[-22.007264, -47.894572],[-22.007299, -47.894703],[-22.007394, -47.894159],[-22.007615, -47.894285]]
         range_ = utils.geo_range_from_center(points)
 
