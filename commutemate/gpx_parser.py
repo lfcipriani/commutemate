@@ -26,12 +26,14 @@ class GpxParser(object):
                     if not orig:
                         orig = points[i]
 
-                    previous = points[i - 1] if i > 0 else points[0]
-                    point    = points[i]
+                    previous   = points[i - 1] if i > 0 else points[0]
+                    point      = points[i]
+                    next_point = points[i + 1] if i < len(points)-1 else points[-1]
 
                     timedelta = point.time - previous.time
                     distance  = utils.geo_distance(point, previous)
                     speed_kmh = utils.geo_speed(distance, timedelta)
+                    bearing   = utils.geo_bearing((point.latitude,point.longitude), (next_point.latitude,next_point.longitude)) 
 
                     ride.add_point(
                             GeoPoint(point.latitude, 
@@ -39,12 +41,13 @@ class GpxParser(object):
                                     point.elevation, 
                                     speed_kmh, 
                                     gpxpy.utils.total_seconds(timedelta),
-                                    point.time))
+                                    point.time,
+                                    bearing))
 
                     dest = points[i]
 
-        ride.set_origin(GeoPoint(orig.latitude, orig.longitude, orig.elevation, 0, 0, orig.time))
-        ride.set_destination(GeoPoint(dest.latitude, dest.longitude, dest.elevation, 0, 0, dest.time))
+        ride.set_origin(GeoPoint(orig.latitude, orig.longitude, orig.elevation, 0, 0, orig.time, 0))
+        ride.set_destination(GeoPoint(dest.latitude, dest.longitude, dest.elevation, 0, 0, dest.time, 0))
         return ride
 
     def __should_ignore(self, point):

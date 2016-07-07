@@ -5,22 +5,23 @@ from commutemate.ride import *
 class TestGeoPoint:
 
     def test_geo_point_constructor(self):
-        p = GeoPoint(1,2,10,18,2,datetime.today())
+        p = GeoPoint(1,2,10,18,2,datetime.today(),0)
         eq_(p.lat, 1)
 
     def test_available_attributes(self):
         today = datetime.today()
-        p = GeoPoint(1,2,10,18,2,today)
+        p = GeoPoint(1,2,10,18,2,today,180)
         eq_(p.lat, 1)
         eq_(p.lon, 2)
         eq_(p.elevation, 10)
         eq_(p.speed, 18)
         eq_(p.seconds_from_previous, 2)
         eq_(p.time, today)
+        eq_(p.bearing, 180)
 
     def test_geo_point_json_serialization(self):
         today = datetime(2016,04,20,12,13,14)
-        p1 = GeoPoint(1,2,10,18.123,2,today)
+        p1 = GeoPoint(1,2,10,18.123,2,today,180)
         js = p1.to_JSON()
         p2 = GeoPoint.from_JSON(js)
 
@@ -30,11 +31,12 @@ class TestGeoPoint:
         eq_(p2.speed, 18.123)
         eq_(p2.seconds_from_previous, 2)
         eq_(p2.time, today)
+        eq_(p2.bearing, 180)
 
 class TestRide:
 
     def test_add_point(self):
-        p = GeoPoint(1,2,10,18,2,datetime.today())
+        p = GeoPoint(1,2,10,18,2,datetime.today(),180)
         r = Ride()
 
         eq_(r.point_count(), 0)
@@ -49,8 +51,8 @@ class TestRide:
         r.add_point(p)
 
     def test_set_origin_and_destination(self):
-        origin      = GeoPoint(1,2,10,18,2,datetime.today())
-        destination = GeoPoint(3,4,10,18,2,datetime.today())
+        origin      = GeoPoint(1,2,10,18,2,datetime.today(),180)
+        destination = GeoPoint(3,4,10,18,2,datetime.today(),180)
         r = Ride()
         r.set_origin(origin)
         r.set_destination(destination)
@@ -59,16 +61,16 @@ class TestRide:
         eq_(r.destination.lat, 3)
 
     def test_set_origin_and_destination_on_the_constructor(self):
-        origin      = GeoPoint(1,2,10,18,2,datetime.today())
-        destination = GeoPoint(3,4,10,18,2,datetime.today())
+        origin      = GeoPoint(1,2,10,18,2,datetime.today(),180)
+        destination = GeoPoint(3,4,10,18,2,datetime.today(),180)
         r = Ride(origin, destination)
 
         eq_(r.origin.lat, 1)
         eq_(r.destination.lat, 3)
         
     def test_ride_json_serialization(self):
-        origin      = GeoPoint(1,2,10,18,2,datetime.today())
-        destination = GeoPoint(3,4,10,18,2,datetime.today())
+        origin      = GeoPoint(1,2,10,18,2,datetime.today(),180)
+        destination = GeoPoint(3,4,10,18,2,datetime.today(),180)
         r = Ride(origin, destination)
         r.add_point(origin)
         r.add_point(destination)

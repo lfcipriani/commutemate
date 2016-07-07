@@ -24,8 +24,8 @@ class TestUtils:
         eq_(int(utils.geo_speed(distance, timedelta)),22)
 
     def test_is_inside_range(self):
-        inside  = GeoPoint(47.558094,10.749937,10,18,2,datetime.today())
-        outside = GeoPoint(47.560451,10.748338,10,18,2,datetime.today())
+        inside  = GeoPoint(47.558094,10.749937,10,18,2,datetime.today(),180)
+        outside = GeoPoint(47.560451,10.748338,10,18,2,datetime.today(),180)
         range_  = (47.557729, 10.750323, 200)
 
         ok_(utils.is_inside_range(range_, inside))
@@ -35,10 +35,12 @@ class TestUtils:
         b00 = [(0, 0),(1, 0)]
         b45 = [(0, 0),(1, 1)]
         b90 = [(0, 0),(0, 1)]
+        b   = [(0, 0),(0, 0)]
 
         eq_(round(utils.geo_bearing(b00[0], b00[1])), 0)
         eq_(round(utils.geo_bearing(b45[0], b45[1])), 45)
         eq_(round(utils.geo_bearing(b90[0], b90[1])), 90)
+        eq_(round(utils.geo_bearing(b[0], b[1])), 0) # going nowhere
 
     def test_geo_beariring(self):
         points = [[-22.007023, -47.895010],[-22.007600, -47.894592],[-22.007608, -47.895222],[-22.006996, -47.894444],[-22.007264, -47.894572],[-22.007299, -47.894703],[-22.007394, -47.894159],[-22.007615, -47.894285]]

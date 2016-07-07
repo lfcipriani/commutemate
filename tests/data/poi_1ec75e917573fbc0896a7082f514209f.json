@@ -5,7 +5,8 @@
         "lon": 13.456139, 
         "time": "2016-03-30T07:10:49Z", 
         "lat": 52.546346, 
-        "speed": 0
+        "speed": 0,
+        "bearing": 180
     }, 
     "duration": 20, 
     "poi_type": "stop", 
@@ -15,7 +16,8 @@
         "lon": 13.424233, 
         "time": "2016-03-30T07:20:08Z", 
         "lat": 52.552884, 
-        "speed": 0.6081465107256382
+        "speed": 0.6081465107256382,
+        "bearing": 180
     }, 
     "speed_since_previous_stop": 16.18388063584122, 
     "destination": {
@@ -24,7 +26,8 @@
         "lon": 13.407341, 
         "time": "2016-03-30T07:29:13Z", 
         "lat": 52.548459, 
-        "speed": 0
+        "speed": 0,
+        "bearing": 180
     }, 
     "id": "1ec75e917573fbc0896a7082f514209f", 
     "previous_stop": "9ca56c1324da309912d6300367bad642"
