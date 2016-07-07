@@ -44,7 +44,7 @@ def geo_range_from_center(points):
         if distance > max_distance:
             max_distance = distance
 
-    return (center_lat, center_lon, distance)
+    return (center_lat, center_lon, max_distance)
 
 # based on: https://gist.github.com/jeromer/2005586
 def geo_bearing(pointA, pointB):

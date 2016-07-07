@@ -31,7 +31,7 @@ class TestUtils:
         ok_(utils.is_inside_range(range_, inside))
         ok_(not utils.is_inside_range(range_, outside))
 
-    def test_geo_range_from_center(self):
+    def test_geo_bearing(self):
         b00 = [(0, 0),(1, 0)]
         b45 = [(0, 0),(1, 1)]
         b90 = [(0, 0),(0, 1)]
@@ -42,13 +42,13 @@ class TestUtils:
         eq_(round(utils.geo_bearing(b90[0], b90[1])), 90)
         eq_(round(utils.geo_bearing(b[0], b[1])), 0) # going nowhere
 
-    def test_geo_beariring(self):
+    def test_geo_range_from_center(self):
         points = [[-22.007023, -47.895010],[-22.007600, -47.894592],[-22.007608, -47.895222],[-22.006996, -47.894444],[-22.007264, -47.894572],[-22.007299, -47.894703],[-22.007394, -47.894159],[-22.007615, -47.894285]]
         range_ = utils.geo_range_from_center(points)
 
         eq_(range_[0],-22.0073055)
         eq_(range_[1],-47.894690499999996)
-        eq_(int(range_[2]),54)
+        eq_(int(range_[2]),64)
 
     def test_full_path(self):
         cwd = os.getcwd()
