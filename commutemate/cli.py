@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, math
 import datetime
 import logging as l
 from optparse import OptionParser
@@ -168,9 +168,12 @@ class CommutemateCLI(object):
             xy = X[class_member_mask & ~core_samples_mask]
             gmap.scatter(xy[:, 0], xy[:, 1], black if k == -1 else blue, size=int(DB_METERS), marker=False)
 
+        for roi in ROIs:
+            gmap.scatter([roi.center_range[0]],[roi.center_range[1]],'#DDDDDD', size=roi.center_range[2], marker=False)
+
         o = os.path.join(self.output_folder,"map.html")
         gmap.draw(o)
-        l.info("Done! There is %d regions of interest detected\nThe map visualization is available at %s" % (n_clusters_, o))
+        l.info("Done!\nThe map visualization is available at %s" % o)
 
 def main():
     CommutemateCLI()
