@@ -136,6 +136,7 @@ class RegionOfInterest(object):
         for type_ in [RegionOfInterest.CORE,RegionOfInterest.NON_CORE]:
             roi.set_poi_ids(json_dict["poi_ids"][type_], type_)
             roi.set_poi_coords(json_dict["poi_coords"][type_], type_)
+            roi.center_range = tuple(json_dict["center_range"])
         return roi
 
     @staticmethod

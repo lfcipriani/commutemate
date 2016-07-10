@@ -68,7 +68,6 @@ class TestROI:
 
         js = roi.to_JSON()
         new_roi = RegionOfInterest.from_JSON(js)
-        new_roi.calculate_center_range()
 
         eq_(int(new_roi.center_range[2]), 2380)
         ok_(not new_roi.poi_list[RegionOfInterest.CORE])
