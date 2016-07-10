@@ -20,6 +20,7 @@ class PointOfInterest(object):
 
     def __generate_id(self):
         md5 = hashlib.md5()
+        md5.update(self.poi_type.__str__())
         md5.update(self.point.time.__str__())
         md5.update(self.point.lat.__str__())
         md5.update(self.point.lon.__str__())
