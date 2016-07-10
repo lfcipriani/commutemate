@@ -5,20 +5,20 @@ from optparse import OptionParser
 from commutemate.roi import PointOfInterest, RegionOfInterest
 from commutemate.config import Config
 from commutemate.gpx_parser import GpxParser
-from commutemate.detectors import detect_stops
+from commutemate.detectors import detect_stops, detect_passes
 import commutemate.utils as utils
 
 class CommutemateCLI(object):
     
     def __init__(self):
         l.basicConfig(stream=sys.stdout, level=l.DEBUG, format='%(asctime)s(%(levelname)s) - %(message)s')
-        commands = ['detectstops','clusterize','detectpass']
+        commands = ['detectstops','clusterize','detectpasses']
 
         # Parsing commend line arguments
         parser = OptionParser("usage: %prog COMMAND -i GPX_FOLDER -w WORKSPACE_FOLDER [-c CONFIG.INI]" + 
                               "\nAvailable COMMANDs: %s" % ", ".join(commands))
         parser.add_option("-g", "--gpx", dest="gpx_folder", action="store",
-                        help="input folder with GPX files (detectstops, detectpass)")
+                        help="input folder with GPX files (detectstops, detectpasses)")
         parser.add_option("-w", "--workspace",
                         action="store", dest="workspace_folder", 
                         help="workspace where json files could be loaded and saved (all commands)")
@@ -40,7 +40,7 @@ class CommutemateCLI(object):
         if not os.path.isdir(self.workspace_folder):
             os.makedirs(self.workspace_folder)
 
-        if command == "detectstops" or command == "detectpass":
+        if command == "detectstops" or command == "detectpasses":
             if not options.gpx_folder or not os.path.isdir(options.gpx_folder):
                 parser.error("gpx folder required or missing")
             self.gpx_folder = utils.full_path(options.gpx_folder)
@@ -77,7 +77,7 @@ class CommutemateCLI(object):
             total += stop_count
             l.info("%s: %d stop(s) detected" % (os.path.basename(gpx), stop_count))
             for s in stops:
-                utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % s.id), s.to_JSON())
+                utils.save_json(os.path.join(self.workspace_folder, "poi_%s_stop.json" % s.id), s.to_JSON())
 
         l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.workspace_folder))
 
@@ -128,8 +128,40 @@ class CommutemateCLI(object):
 
         l.info("Done!\nThe map visualization is available at %s" % o)
 
-    def detectpass(self):
-        pass
+    def detectpasses(self):
+        # Getting all gpx files in specified folder
+        gpx_files = []
+        for f in os.listdir(self.gpx_folder):
+            if f.endswith('.gpx'):
+                gpx_files.append(os.path.join(self.gpx_folder, f))
+        l.info("There's %d gpx files to be proccessed." % len(gpx_files))
+
+        # Loading ROIs
+        json_files = []
+        for f in os.listdir(self.workspace_folder):
+            if os.path.basename(f).startswith("roi_") and f.endswith('.json'):
+                json_files.append(os.path.join(self.workspace_folder, f))
+
+        ROIs = []
+        for jsf in json_files:
+            roi = utils.load_json(jsf, RegionOfInterest)
+            ROIs.append(roi)
+        l.info("Loaded %d ROIs." % len(json_files))
+
+        # Detecting Passes and storing Points of Interest
+        total = 0
+        for gpx in gpx_files:
+            ride  = GpxParser(gpx).get_ride_from_track(self.config.region_ignores)
+
+            passes = detect_passes(ride, ROIs)
+
+            passes_count = len(passes)
+            total += passes_count
+            l.info("%s: %d passe(s) detected" % (os.path.basename(gpx), passes_count))
+            for p in passes:
+                utils.save_json(os.path.join(self.workspace_folder, "poi_%s_pass.json" % p.id), p.to_JSON())
+
+        l.info("Done! There was %d passes detected\nThe data is available at %s" % (total, self.workspace_folder))
 
 def main():
     CommutemateCLI()
