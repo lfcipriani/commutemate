@@ -12,16 +12,16 @@ class CommutemateCLI(object):
     
     def __init__(self):
         l.basicConfig(stream=sys.stdout, level=l.DEBUG, format='%(asctime)s(%(levelname)s) - %(message)s')
-        commands = ['detectstops','clusterize']
+        commands = ['detectstops','clusterize','detectpass']
 
         # Parsing commend line arguments
-        parser = OptionParser("usage: %prog COMMAND -i FOLDER -o FOLDER [-c CONFIG.INI]" + 
+        parser = OptionParser("usage: %prog COMMAND -i GPX_FOLDER -w WORKSPACE_FOLDER [-c CONFIG.INI]" + 
                               "\nAvailable COMMANDs: %s" % ", ".join(commands))
-        parser.add_option("-i", "--input", dest="folder", action="store",
-                        help="input folder with GPX files (detectstops) or json (clusterize)")
-        parser.add_option("-o", "--output",
-                        action="store", dest="output_folder", metavar="FOLDER", 
-                        help="folder to save the output json files")
+        parser.add_option("-g", "--gpx", dest="gpx_folder", action="store",
+                        help="input folder with GPX files (detectstops, detectpass)")
+        parser.add_option("-w", "--workspace",
+                        action="store", dest="workspace_folder", 
+                        help="workspace where json files could be loaded and saved (all commands)")
         parser.add_option("-c", "--config",
                         action="store", dest="config", 
                         help="config file (optional)")
@@ -34,11 +34,16 @@ class CommutemateCLI(object):
             parser.error("invalid command: %s. Try running with -h for help" % args[0])
         command = args[0]
 
-        if not options.folder or not options.output_folder:
-            parser.error("config, input and output folders required")
+        if not options.workspace_folder:
+            parser.error("workspace folder always required")
+        self.workspace_folder = utils.full_path(options.workspace_folder)
+        if not os.path.isdir(self.workspace_folder):
+            os.makedirs(self.workspace_folder)
 
-        self.input_folder = utils.full_path(options.folder)
-        self.output_folder = utils.full_path(options.output_folder)
+        if command == "detectstops" or command == "detectpass":
+            if not options.gpx_folder or not os.path.isdir(options.gpx_folder):
+                parser.error("gpx folder required or missing")
+            self.gpx_folder = utils.full_path(options.gpx_folder)
 
         if not options.config:
             self.config = Config()
@@ -51,20 +56,14 @@ class CommutemateCLI(object):
 
         l.info(self.config.__str__())
 
-        if not os.path.isdir(self.input_folder):
-            parser.error("input folder does not exist")
-
-        if not os.path.isdir(self.output_folder):
-            os.makedirs(self.output_folder)
-
         getattr(self,command)()
 
     def detectstops(self):
         # Getting all gpx files in specified folder
         gpx_files = []
-        for f in os.listdir(self.input_folder):
+        for f in os.listdir(self.gpx_folder):
             if f.endswith('.gpx'):
-                gpx_files.append(os.path.join(self.input_folder, f))
+                gpx_files.append(os.path.join(self.gpx_folder, f))
         l.info("There's %d gpx files to be proccessed. Starting now..." % len(gpx_files))
 
         # Detecting Stops and storing Points of Interest
@@ -78,18 +77,18 @@ class CommutemateCLI(object):
             total += stop_count
             l.info("%s: %d stop(s) detected" % (os.path.basename(gpx), stop_count))
             for s in stops:
-                utils.save_json(os.path.join(self.output_folder, "poi_%s.json" % s.id), s.to_JSON())
+                utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % s.id), s.to_JSON())
 
-        l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.output_folder))
+        l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.workspace_folder))
 
     def clusterize(self):
         import numpy
         import commutemate.clustering as clustering
 
         json_files = []
-        for f in os.listdir(self.input_folder):
+        for f in os.listdir(self.workspace_folder):
             if os.path.basename(f).startswith("poi_") and f.endswith('.json'):
-                json_files.append(os.path.join(self.input_folder, f))
+                json_files.append(os.path.join(self.workspace_folder, f))
         l.info("There's %d POI(s) to be clusterized. Preparing data..." % len(json_files))
 
         geo_coords = []
@@ -115,19 +114,22 @@ class CommutemateCLI(object):
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
         # ============== creating ROIs =============== #
-        ROIs = clustering.create_ROIs(POIs, labels, set(labels) - set([-1]), core_samples_mask, self.output_folder, self.config.dbscan_eps_in_meters)
+        ROIs = clustering.create_ROIs(POIs, labels, set(labels) - set([-1]), core_samples_mask, self.workspace_folder, self.config.dbscan_eps_in_meters)
 
         l.info("ROI: center=[lat,lon] range=in meters POIs=[total] ([core] + [non core])")
         for roi_ in ROIs:
             l.info("ROI: center=[%3.7f,%3.7f] range=%2.3f meters POIs=%d" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords())))
-        l.info("Done! There was %d regions of interest detected\nThe data is available at %s" % (len(ROIs), self.output_folder))
+        l.info("Done! There was %d regions of interest detected\nThe data is available at %s" % (len(ROIs), self.workspace_folder))
 
         l.info("Rendering visualization")
 
         # ============== rendring map =============== #
-        o = clustering.render_map(ROIs, X, labels, core_samples_mask, self.output_folder, self.config.dbscan_eps_in_meters)
+        o = clustering.render_map(ROIs, X, labels, core_samples_mask, self.workspace_folder, self.config.dbscan_eps_in_meters)
 
         l.info("Done!\nThe map visualization is available at %s" % o)
+
+    def detectpass(self):
+        pass
 
 def main():
     CommutemateCLI()
