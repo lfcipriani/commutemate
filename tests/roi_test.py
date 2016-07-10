@@ -27,6 +27,16 @@ class TestPOI:
 
 class TestROI:
 
+    def test_is_poi_included(self):
+        roi = RegionOfInterest()
+        poi_ids_core = ['06dd1e03b5684f3e763c1f006c53d032','6ddc358f6040f3a4be348c5ea7fa398c','6e0d4fb291cc4e6f5c5d40e8471710cc']
+        poi_ids_non_core = ['6e9ecd248699c93b3e52df56396b0103']
+        roi.set_poi_ids(poi_ids_core, RegionOfInterest.CORE)
+        roi.set_poi_ids(poi_ids_non_core, RegionOfInterest.NON_CORE)
+
+        ok_(roi.is_poi_included("06dd1e03b5684f3e763c1f006c53d032"))
+        ok_(not roi.is_poi_included("non_existent_id"))
+
     def test_ROI_hydration(self):
         roi = RegionOfInterest()
         poi_ids_core = ['06dd1e03b5684f3e763c1f006c53d032','6ddc358f6040f3a4be348c5ea7fa398c','6e0d4fb291cc4e6f5c5d40e8471710cc']
@@ -71,3 +81,4 @@ class TestROI:
         eq_(len(new_roi.poi_list[RegionOfInterest.NON_CORE]), 1)
         eq_(len(new_roi.poi_coords[RegionOfInterest.CORE]), 3)
         eq_(len(new_roi.poi_coords[RegionOfInterest.NON_CORE]), 1)
+

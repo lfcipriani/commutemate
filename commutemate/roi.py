@@ -109,6 +109,16 @@ class RegionOfInterest(object):
     def set_poi_coords(self, poi_coords, type_):
         self.poi_coords[type_] = poi_coords
 
+    def is_poi_included(self, poi_id):
+        result = False
+        for type_ in [RegionOfInterest.CORE,RegionOfInterest.NON_CORE]:
+            try:
+                if self.poi_ids[type_].index(poi_id) >= 0:
+                    return True
+            except ValueError:
+                pass
+        return result
+
     def to_dict(self):
         js = {
             "poi_ids": self.poi_ids,
