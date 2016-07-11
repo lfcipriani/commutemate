@@ -3,7 +3,7 @@ import datetime
 import numpy, gmplot
 from sklearn.cluster import DBSCAN
 import commutemate.utils as utils
-from commutemate.roi import RegionOfInterest
+from commutemate.roi import RegionOfInterest, PointOfInterest
 
 def cluster(X, eps_in_meters, min_samples):
     # Running DBSCAN cluster algorithm
@@ -13,17 +13,17 @@ def cluster(X, eps_in_meters, min_samples):
     db = DBSCAN(eps=DB_EPS, min_samples=min_samples, metric='haversine').fit(Y)
     return db
 
-def create_ROIs(POIs, labels, roi_labels, core_samples_mask, output_folder, add_center_range=0):
+def create_ROIs(POIs, labels, roi_labels, output_folder, add_center_range=0):
     ROIs = []
     for k in roi_labels:
         roi_ = RegionOfInterest()
 
         class_member_mask = (labels == k)
-        core     = POIs[class_member_mask & core_samples_mask]
-        non_core = POIs[class_member_mask & ~core_samples_mask]
+        stop_POIs = [item for item in POIs[class_member_mask] if item.poi_type == PointOfInterest.TYPE_STOP]
+        pass_POIs = [item for item in POIs[class_member_mask] if item.poi_type == PointOfInterest.TYPE_PASS]
 
-        roi_.set_poi_list(core.tolist(), RegionOfInterest.CORE)
-        roi_.set_poi_list(non_core.tolist(), RegionOfInterest.NON_CORE)
+        roi_.set_poi_list(stop_POIs, PointOfInterest.TYPE_STOP)
+        roi_.set_poi_list(pass_POIs, PointOfInterest.TYPE_PASS)
         roi_.calculate_center_range(add_center_range)
 
         ROIs.append(roi_)
@@ -37,25 +37,34 @@ def create_ROIs(POIs, labels, roi_labels, core_samples_mask, output_folder, add_
 
     return ROIs
 
-def render_map(ROIs, X, labels, core_samples_mask, output_folder, dbscan_radius):
+def render_map(ROIs, POIs, X, labels, output_folder, dbscan_radius):
     import gmplot
-    gmap = gmplot.GoogleMapPlotter(52.52732, 13.41766, 12)
+
+    roi_points = [[roi.center_range[0], roi.center_range[1]] for roi in ROIs]
+    center = utils.geo_range_from_center(roi_points)
+    gmap = gmplot.GoogleMapPlotter(center[0], center[1], 12)
 
     black  = '#000000' # noise
-    blue   = '#31ABD4' # non-core values
-    red    = '#C93660' # core values
+    green  = '#0BDE4E' # passes
+    red    = '#E84D2A' # stops
+    whitey = '#DDDDDD' # ROI center
     unique_labels = set(labels)
     for k in unique_labels:
         class_member_mask = (labels == k) # array of true/false. true if label equal set of label value
 
-        xy = X[class_member_mask & core_samples_mask]
-        gmap.scatter(xy[:, 0], xy[:, 1], red, size=int(dbscan_radius), marker=False)
-
-        xy = X[class_member_mask & ~core_samples_mask]
-        gmap.scatter(xy[:, 0], xy[:, 1], black if k == -1 else blue, size=int(dbscan_radius), marker=False)
+        if k == -1:
+            xy = X[class_member_mask]
+            gmap.scatter(xy[:, 0], xy[:, 1], black, size=int(dbscan_radius), marker=False)
+        else:
+            xy = numpy.array([[item.point.lat, item.point.lon] for item in POIs[class_member_mask] if item.poi_type == PointOfInterest.TYPE_STOP])
+            if len(xy) > 0:
+                gmap.scatter(xy[:, 0], xy[:, 1], red, size=int(dbscan_radius), marker=False)
+            xy = numpy.array([[item.point.lat, item.point.lon] for item in POIs[class_member_mask] if item.poi_type == PointOfInterest.TYPE_PASS])
+            if len(xy) > 0:
+                gmap.scatter(xy[:, 0], xy[:, 1], green, size=int(dbscan_radius), marker=False)
 
     for roi in ROIs:
-        gmap.scatter([roi.center_range[0]],[roi.center_range[1]],'#DDDDDD', size=roi.center_range[2], marker=False)
+        gmap.scatter([roi.center_range[0]],[roi.center_range[1]],whitey, size=roi.center_range[2], marker=False)
 
     o = os.path.join(output_folder,"map.html")
     gmap.draw(o)

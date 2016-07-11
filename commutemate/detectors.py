@@ -1,6 +1,6 @@
 import commutemate.utils as utils
 from commutemate.ride import *
-from commutemate.roi import PointOfInterest, RegionOfInterest
+from commutemate.roi import PointOfInterest
 
 STOPPED_SPEED_KMH_THRESHOLD = 1.5
 

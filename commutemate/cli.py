@@ -77,7 +77,7 @@ class CommutemateCLI(object):
             total += stop_count
             l.info("%s: %d stop(s) detected" % (os.path.basename(gpx), stop_count))
             for s in stops:
-                utils.save_json(os.path.join(self.workspace_folder, "poi_%s_stop.json" % s.id), s.to_JSON())
+                utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % s.id), s.to_JSON())
 
         l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.workspace_folder))
 
@@ -107,14 +107,12 @@ class CommutemateCLI(object):
 
         l.info("Done!")
         l.info("Creating regions of interest")
-        core_samples_mask = numpy.zeros_like(db.labels_, dtype=bool)
-        core_samples_mask[db.core_sample_indices_] = True # array of true/false, true for core sample, false otherwise
 
         labels = db.labels_
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
         # ============== creating ROIs =============== #
-        ROIs = clustering.create_ROIs(POIs, labels, set(labels) - set([-1]), core_samples_mask, self.workspace_folder, self.config.dbscan_eps_in_meters)
+        ROIs = clustering.create_ROIs(POIs, labels, set(labels) - set([-1]), self.workspace_folder, self.config.dbscan_eps_in_meters)
 
         l.info("ROI: center=[lat,lon] range=in meters POIs=[total] ([core] + [non core])")
         for roi_ in ROIs:
@@ -124,7 +122,7 @@ class CommutemateCLI(object):
         l.info("Rendering visualization")
 
         # ============== rendring map =============== #
-        o = clustering.render_map(ROIs, X, labels, core_samples_mask, self.workspace_folder, self.config.dbscan_eps_in_meters)
+        o = clustering.render_map(ROIs, POIs, X, labels, self.workspace_folder, self.config.dbscan_eps_in_meters)
 
         l.info("Done!\nThe map visualization is available at %s" % o)
 
@@ -159,7 +157,7 @@ class CommutemateCLI(object):
             total += passes_count
             l.info("%s: %d passe(s) detected" % (os.path.basename(gpx), passes_count))
             for p in passes:
-                utils.save_json(os.path.join(self.workspace_folder, "poi_%s_pass.json" % p.id), p.to_JSON())
+                utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % p.id), p.to_JSON())
 
         l.info("Done! There was %d passes detected\nThe data is available at %s" % (total, self.workspace_folder))
 

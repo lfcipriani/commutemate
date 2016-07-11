@@ -29,40 +29,40 @@ class TestROI:
 
     def test_is_poi_included(self):
         roi = RegionOfInterest()
-        poi_ids_core = ['06dd1e03b5684f3e763c1f006c53d032','6ddc358f6040f3a4be348c5ea7fa398c','6e0d4fb291cc4e6f5c5d40e8471710cc']
-        poi_ids_non_core = ['6e9ecd248699c93b3e52df56396b0103']
-        roi.set_poi_ids(poi_ids_core, RegionOfInterest.CORE)
-        roi.set_poi_ids(poi_ids_non_core, RegionOfInterest.NON_CORE)
+        poi_ids_stop = ['06dd1e03b5684f3e763c1f006c53d032','6ddc358f6040f3a4be348c5ea7fa398c','6e0d4fb291cc4e6f5c5d40e8471710cc']
+        poi_ids_pass = ['6e9ecd248699c93b3e52df56396b0103']
+        roi.set_poi_ids(poi_ids_stop, PointOfInterest.TYPE_STOP)
+        roi.set_poi_ids(poi_ids_pass, PointOfInterest.TYPE_PASS)
 
         ok_(roi.is_poi_included("06dd1e03b5684f3e763c1f006c53d032"))
         ok_(not roi.is_poi_included("non_existent_id"))
 
     def test_ROI_hydration(self):
         roi = RegionOfInterest()
-        poi_ids_core = ['06dd1e03b5684f3e763c1f006c53d032','6ddc358f6040f3a4be348c5ea7fa398c','6e0d4fb291cc4e6f5c5d40e8471710cc']
-        poi_ids_non_core = ['6e9ecd248699c93b3e52df56396b0103']
-        roi.set_poi_ids(poi_ids_core, RegionOfInterest.CORE)
-        roi.set_poi_ids(poi_ids_non_core, RegionOfInterest.NON_CORE)
+        poi_ids_stop = ['06dd1e03b5684f3e763c1f006c53d032','6ddc358f6040f3a4be348c5ea7fa398c','6e0d4fb291cc4e6f5c5d40e8471710cc']
+        poi_ids_pass = ['6e9ecd248699c93b3e52df56396b0103']
+        roi.set_poi_ids(poi_ids_stop, PointOfInterest.TYPE_STOP)
+        roi.set_poi_ids(poi_ids_pass, PointOfInterest.TYPE_PASS)
 
         ok_(not roi.center_range)
-        ok_(not roi.poi_list[RegionOfInterest.CORE])
+        ok_(not roi.poi_list[PointOfInterest.TYPE_STOP])
         
         RegionOfInterest.hydrate_POIs(roi, 'tests/data/')
         roi.calculate_center_range(11)
 
         eq_(int(roi.center_range[2]), 2391)
-        eq_(type(roi.poi_list[RegionOfInterest.CORE][0]), PointOfInterest)
-        eq_(len(roi.poi_list[RegionOfInterest.CORE]), 3)
-        eq_(len(roi.poi_list[RegionOfInterest.NON_CORE]), 1)
-        eq_(len(roi.poi_coords[RegionOfInterest.CORE]), 3)
-        eq_(len(roi.poi_coords[RegionOfInterest.NON_CORE]), 1)
+        eq_(type(roi.poi_list[PointOfInterest.TYPE_STOP][0]), PointOfInterest)
+        eq_(len(roi.poi_list[PointOfInterest.TYPE_STOP]), 3)
+        eq_(len(roi.poi_list[PointOfInterest.TYPE_PASS]), 1)
+        eq_(len(roi.poi_coords[PointOfInterest.TYPE_STOP]), 3)
+        eq_(len(roi.poi_coords[PointOfInterest.TYPE_PASS]), 1)
 
     def test_roi_json_serialization(self):
         roi = RegionOfInterest()
-        poi_ids_core = ['06dd1e03b5684f3e763c1f006c53d032','6ddc358f6040f3a4be348c5ea7fa398c','6e0d4fb291cc4e6f5c5d40e8471710cc']
-        poi_ids_non_core = ['6e9ecd248699c93b3e52df56396b0103']
-        roi.set_poi_ids(poi_ids_core, RegionOfInterest.CORE)
-        roi.set_poi_ids(poi_ids_non_core, RegionOfInterest.NON_CORE)
+        poi_ids_stop = ['06dd1e03b5684f3e763c1f006c53d032','6ddc358f6040f3a4be348c5ea7fa398c','6e0d4fb291cc4e6f5c5d40e8471710cc']
+        poi_ids_pass = ['6e9ecd248699c93b3e52df56396b0103']
+        roi.set_poi_ids(poi_ids_stop, PointOfInterest.TYPE_STOP)
+        roi.set_poi_ids(poi_ids_pass, PointOfInterest.TYPE_PASS)
         RegionOfInterest.hydrate_POIs(roi, 'tests/data/')
         roi.calculate_center_range()
 
@@ -70,14 +70,14 @@ class TestROI:
         new_roi = RegionOfInterest.from_JSON(js)
 
         eq_(int(new_roi.center_range[2]), 2380)
-        ok_(not new_roi.poi_list[RegionOfInterest.CORE])
+        ok_(not new_roi.poi_list[PointOfInterest.TYPE_STOP])
 
         RegionOfInterest.hydrate_POIs(new_roi, 'tests/data/')
 
         eq_(int(new_roi.center_range[2]), 2380)
-        eq_(type(new_roi.poi_list[RegionOfInterest.CORE][0]), PointOfInterest)
-        eq_(len(new_roi.poi_list[RegionOfInterest.CORE]), 3)
-        eq_(len(new_roi.poi_list[RegionOfInterest.NON_CORE]), 1)
-        eq_(len(new_roi.poi_coords[RegionOfInterest.CORE]), 3)
-        eq_(len(new_roi.poi_coords[RegionOfInterest.NON_CORE]), 1)
+        eq_(type(new_roi.poi_list[PointOfInterest.TYPE_STOP][0]), PointOfInterest)
+        eq_(len(new_roi.poi_list[PointOfInterest.TYPE_STOP]), 3)
+        eq_(len(new_roi.poi_list[PointOfInterest.TYPE_PASS]), 1)
+        eq_(len(new_roi.poi_coords[PointOfInterest.TYPE_STOP]), 3)
+        eq_(len(new_roi.poi_coords[PointOfInterest.TYPE_PASS]), 1)
 

@@ -81,13 +81,10 @@ class PointOfInterest(object):
 
 class RegionOfInterest(object):
 
-    CORE = 'core'
-    NON_CORE = 'non_core'
-
     def __init__(self):
-        self.poi_ids = { RegionOfInterest.CORE: None, RegionOfInterest.NON_CORE: None }
-        self.poi_list = { RegionOfInterest.CORE: None, RegionOfInterest.NON_CORE: None }
-        self.poi_coords = { RegionOfInterest.CORE: None, RegionOfInterest.NON_CORE: None }
+        self.poi_ids = { PointOfInterest.TYPE_STOP: None, PointOfInterest.TYPE_PASS: None }
+        self.poi_list = { PointOfInterest.TYPE_STOP: None, PointOfInterest.TYPE_PASS: None }
+        self.poi_coords = { PointOfInterest.TYPE_STOP: None, PointOfInterest.TYPE_PASS: None }
         self.center_range = None
 
     def set_poi_list(self, poi_list, type_):
@@ -101,7 +98,7 @@ class RegionOfInterest(object):
         self.center_range = (rg[0], rg[1], meters)
 
     def get_all_poi_coords(self):
-        return self.poi_coords[RegionOfInterest.CORE] + self.poi_coords[RegionOfInterest.NON_CORE]
+        return self.poi_coords[PointOfInterest.TYPE_STOP] + self.poi_coords[PointOfInterest.TYPE_PASS]
 
     def set_poi_ids(self, poi_ids, type_):
         self.poi_ids[type_] = poi_ids
@@ -111,7 +108,7 @@ class RegionOfInterest(object):
 
     def is_poi_included(self, poi_id):
         result = False
-        for type_ in [RegionOfInterest.CORE,RegionOfInterest.NON_CORE]:
+        for type_ in [PointOfInterest.TYPE_STOP,PointOfInterest.TYPE_PASS]:
             try:
                 if self.poi_ids[type_].index(poi_id) >= 0:
                     return True
@@ -133,7 +130,7 @@ class RegionOfInterest(object):
     @staticmethod
     def from_dict(json_dict):
         roi = RegionOfInterest()
-        for type_ in [RegionOfInterest.CORE,RegionOfInterest.NON_CORE]:
+        for type_ in [PointOfInterest.TYPE_STOP,PointOfInterest.TYPE_PASS]:
             roi.set_poi_ids(json_dict["poi_ids"][type_], type_)
             roi.set_poi_coords(json_dict["poi_coords"][type_], type_)
             roi.center_range = tuple(json_dict["center_range"])
@@ -147,7 +144,7 @@ class RegionOfInterest(object):
 
     @staticmethod
     def hydrate_POIs(roi, json_base_path):
-        for type_ in [RegionOfInterest.CORE,RegionOfInterest.NON_CORE]:
+        for type_ in [PointOfInterest.TYPE_STOP,PointOfInterest.TYPE_PASS]:
             result = []
             for i in roi.poi_ids[type_]:
                 result.append(utils.load_json(os.path.join(json_base_path, ("poi_%s.json" % i)),PointOfInterest))
