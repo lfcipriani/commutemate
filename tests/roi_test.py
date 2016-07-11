@@ -48,9 +48,9 @@ class TestROI:
         ok_(not roi.poi_list[PointOfInterest.TYPE_STOP])
         
         RegionOfInterest.hydrate_POIs(roi, 'tests/data/')
-        roi.calculate_center_range(11)
+        roi.calculate_center_range(2500)
 
-        eq_(int(roi.center_range[2]), 2391)
+        eq_(int(roi.center_range[2]), 2500)
         eq_(type(roi.poi_list[PointOfInterest.TYPE_STOP][0]), PointOfInterest)
         eq_(len(roi.poi_list[PointOfInterest.TYPE_STOP]), 3)
         eq_(len(roi.poi_list[PointOfInterest.TYPE_PASS]), 1)

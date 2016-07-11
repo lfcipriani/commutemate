@@ -92,9 +92,9 @@ class RegionOfInterest(object):
         self.set_poi_ids([p.id for p in poi_list], type_)
         self.set_poi_coords([[p.point.lat, p.point.lon] for p in poi_list], type_)
 
-    def calculate_center_range(self, additional=0):
+    def calculate_center_range(self, minimum=0):
         rg = utils.geo_range_from_center(self.get_all_poi_coords())
-        meters = rg[2] + additional
+        meters = rg[2] if rg[2] > minimum else minimum
         self.center_range = (rg[0], rg[1], meters)
 
     def get_all_poi_coords(self):

@@ -13,18 +13,19 @@ def cluster(X, eps_in_meters, min_samples):
     db = DBSCAN(eps=DB_EPS, min_samples=min_samples, metric='haversine').fit(Y)
     return db
 
-def create_ROIs(POIs, labels, roi_labels, output_folder, add_center_range=0):
+def create_ROIs(POIs, labels, roi_labels, output_folder, min_center_range=0):
     ROIs = []
     for k in roi_labels:
         roi_ = RegionOfInterest()
 
         class_member_mask = (labels == k)
+        # TODO improve this by using masks (this approach affects performance)
         stop_POIs = [item for item in POIs[class_member_mask] if item.poi_type == PointOfInterest.TYPE_STOP]
         pass_POIs = [item for item in POIs[class_member_mask] if item.poi_type == PointOfInterest.TYPE_PASS]
 
         roi_.set_poi_list(stop_POIs, PointOfInterest.TYPE_STOP)
         roi_.set_poi_list(pass_POIs, PointOfInterest.TYPE_PASS)
-        roi_.calculate_center_range(add_center_range)
+        roi_.calculate_center_range(min_center_range)
 
         ROIs.append(roi_)
 
