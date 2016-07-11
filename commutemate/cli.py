@@ -148,17 +148,26 @@ class CommutemateCLI(object):
 
         # Detecting Passes and storing Points of Interest
         total = 0
+        total_stats = {
+                "# ROIs entered": 0,
+                "# ROIs stop POI": 0, 
+                "# ROIs stop without POI": 0, 
+                "# ROIs pass": 0,
+            }
         for gpx in gpx_files:
             ride  = GpxParser(gpx).get_ride_from_track(self.config.region_ignores)
 
-            passes = detect_passes(ride, ROIs)
+            passes, stats = detect_passes(ride, ROIs)
 
+            for k in stats.keys():
+                total_stats[k] += stats[k]
             passes_count = len(passes)
             total += passes_count
             l.info("%s: %d passe(s) detected" % (os.path.basename(gpx), passes_count))
             for p in passes:
                 utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % p.id), p.to_JSON())
 
+        l.info("Detection metrics: %s" % total_stats)
         l.info("Done! There was %d passes detected\nThe data is available at %s" % (total, self.workspace_folder))
 
 def main():

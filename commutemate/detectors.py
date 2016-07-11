@@ -41,7 +41,7 @@ def detect_passes(ride, ROIs):
     stats = {
             "# ROIs entered": 0,
             "# ROIs stop POI": 0, 
-            "# ROIs stop non POI": 0, 
+            "# ROIs stop without POI": 0, 
             "# ROIs pass": 0,
         }
 
@@ -72,7 +72,7 @@ def detect_passes(ride, ROIs):
                     previous_stop = poi
                     stats["# ROIs stop POI"] += 1
                 else:
-                    stats["# ROIs stop non POI"] += 1
+                    stats["# ROIs stop without POI"] += 1
 
                 on_a_stop     = False
                 stop_buffer   = None
@@ -96,7 +96,7 @@ def detect_passes(ride, ROIs):
                 pass_buffer   = []
                 current_roi   = None
 
-    return passes
+    return passes, stats
 
 def __inside_a_ROI(point, ROIs):
     # TODO use a index to search implement that
