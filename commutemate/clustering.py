@@ -26,6 +26,7 @@ def create_ROIs(POIs, labels, roi_labels, output_folder, min_center_range=0):
         roi_.set_poi_list(stop_POIs, PointOfInterest.TYPE_STOP)
         roi_.set_poi_list(pass_POIs, PointOfInterest.TYPE_PASS)
         roi_.calculate_center_range(min_center_range)
+        roi_.calculate_bearing_feats()
 
         ROIs.append(roi_)
 

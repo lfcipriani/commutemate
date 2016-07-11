@@ -36,10 +36,12 @@ class TestUtils:
         b45 = [(0, 0),(1, 1)]
         b90 = [(0, 0),(0, 1)]
         b   = [(0, 0),(0, 0)]
+        b270 = [(0, 0),(0, -1)]
 
         eq_(round(utils.geo_bearing(b00[0], b00[1])), 0)
         eq_(round(utils.geo_bearing(b45[0], b45[1])), 45)
         eq_(round(utils.geo_bearing(b90[0], b90[1])), 90)
+        eq_(round(utils.geo_bearing(b270[0], b270[1])), 270)
         eq_(round(utils.geo_bearing(b[0], b[1])), 0) # going nowhere
 
     def test_geo_range_from_center(self):

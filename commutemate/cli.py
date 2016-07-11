@@ -116,7 +116,7 @@ class CommutemateCLI(object):
 
         l.info("ROI: center=[lat,lon] range=in meters POIs=[total] ([core] + [non core])")
         for roi_ in ROIs:
-            l.info("ROI: center=[%3.7f,%3.7f] range=%2.3f meters POIs=%d" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords())))
+            l.info("ROI: center=[%3.7f,%3.7f] range=%02.3f meters POIs=%3d bea.avg=%3.2f bea.var=%1.5f" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords()), roi_.bearing_average, roi_.bearing_variance))
         l.info("Done! There was %d regions of interest detected\nThe data is available at %s" % (len(ROIs), self.workspace_folder))
 
         l.info("Rendering visualization")

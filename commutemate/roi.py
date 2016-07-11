@@ -1,5 +1,6 @@
 import json, os
 import hashlib
+import numpy
 from commutemate.ride import GeoPoint
 import commutemate.utils as utils
 
@@ -82,10 +83,12 @@ class PointOfInterest(object):
 class RegionOfInterest(object):
 
     def __init__(self):
-        self.poi_ids = { PointOfInterest.TYPE_STOP: None, PointOfInterest.TYPE_PASS: None }
-        self.poi_list = { PointOfInterest.TYPE_STOP: None, PointOfInterest.TYPE_PASS: None }
-        self.poi_coords = { PointOfInterest.TYPE_STOP: None, PointOfInterest.TYPE_PASS: None }
-        self.center_range = None
+        self.poi_ids = { PointOfInterest.TYPE_STOP: [], PointOfInterest.TYPE_PASS: [] }
+        self.poi_list = { PointOfInterest.TYPE_STOP: [], PointOfInterest.TYPE_PASS: [] }
+        self.poi_coords = { PointOfInterest.TYPE_STOP: [], PointOfInterest.TYPE_PASS: [] }
+        self.center_range     = None
+        self.bearing_average  = None
+        self.bearing_variance = None
 
     def set_poi_list(self, poi_list, type_):
         self.poi_list[type_] = poi_list
@@ -96,6 +99,17 @@ class RegionOfInterest(object):
         rg = utils.geo_range_from_center(self.get_all_poi_coords())
         meters = rg[2] if rg[2] > minimum else minimum
         self.center_range = (rg[0], rg[1], meters)
+
+    def calculate_bearing_feats(self):
+        rads = numpy.radians(numpy.array([p.point.bearing for p in self.get_all_pois()]))
+        avgsin = numpy.average(numpy.sin(rads))
+        avgcos = numpy.average(numpy.cos(rads))
+        tan = avgsin / avgcos
+        self.bearing_average = numpy.abs(numpy.degrees(numpy.arctan(tan)))
+        self.bearing_variance = numpy.sqrt(numpy.power(avgsin,2) + numpy.power(avgcos,2))
+
+    def get_all_pois(self):
+        return self.poi_list[PointOfInterest.TYPE_STOP] + self.poi_list[PointOfInterest.TYPE_PASS]
 
     def get_all_poi_coords(self):
         return self.poi_coords[PointOfInterest.TYPE_STOP] + self.poi_coords[PointOfInterest.TYPE_PASS]
@@ -120,7 +134,9 @@ class RegionOfInterest(object):
         js = {
             "poi_ids": self.poi_ids,
             "poi_coords": self.poi_coords,
-            "center_range": self.center_range
+            "center_range": self.center_range,
+            "bearing_average": self.bearing_average,
+            "bearing_variance": self.bearing_variance,
         }
         return js
 
@@ -134,13 +150,14 @@ class RegionOfInterest(object):
             roi.set_poi_ids(json_dict["poi_ids"][type_], type_)
             roi.set_poi_coords(json_dict["poi_coords"][type_], type_)
             roi.center_range = tuple(json_dict["center_range"])
+            roi.bearing_average = json_dict["bearing_average"]
+            roi.bearing_variance = json_dict["bearing_variance"]
         return roi
 
     @staticmethod
     def from_JSON(json_str):
         js = json.loads(json_str)
         return RegionOfInterest.from_dict(js)
-
 
     @staticmethod
     def hydrate_POIs(roi, json_base_path):
