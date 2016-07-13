@@ -86,9 +86,9 @@ class RegionOfInterest(object):
         self.poi_ids = { PointOfInterest.TYPE_STOP: [], PointOfInterest.TYPE_PASS: [] }
         self.poi_list = { PointOfInterest.TYPE_STOP: [], PointOfInterest.TYPE_PASS: [] }
         self.poi_coords = { PointOfInterest.TYPE_STOP: [], PointOfInterest.TYPE_PASS: [] }
-        self.center_range     = None
-        self.bearing_average  = None
-        self.bearing_variance = None
+        self.center_range = None
+        self.bearing_avg  = None
+        self.bearing_std  = None
 
     def set_poi_list(self, poi_list, type_):
         self.poi_list[type_] = poi_list
@@ -101,12 +101,10 @@ class RegionOfInterest(object):
         self.center_range = (rg[0], rg[1], meters)
 
     def calculate_bearing_feats(self):
+        import scipy.stats as st
         rads = numpy.radians(numpy.array([p.point.bearing for p in self.get_all_pois()]))
-        avgsin = numpy.average(numpy.sin(rads))
-        avgcos = numpy.average(numpy.cos(rads))
-        tan = avgsin / avgcos
-        self.bearing_average = numpy.abs(numpy.degrees(numpy.arctan(tan)))
-        self.bearing_variance = numpy.sqrt(numpy.power(avgsin,2) + numpy.power(avgcos,2))
+        self.bearing_avg = numpy.degrees(st.circmean(rads))
+        self.bearing_std = numpy.degrees(st.circstd(rads))
 
     def get_all_pois(self):
         return self.poi_list[PointOfInterest.TYPE_STOP] + self.poi_list[PointOfInterest.TYPE_PASS]
@@ -135,8 +133,8 @@ class RegionOfInterest(object):
             "poi_ids": self.poi_ids,
             "poi_coords": self.poi_coords,
             "center_range": self.center_range,
-            "bearing_average": self.bearing_average,
-            "bearing_variance": self.bearing_variance,
+            "bearing_avg": self.bearing_avg,
+            "bearing_std": self.bearing_std,
         }
         return js
 
@@ -150,8 +148,8 @@ class RegionOfInterest(object):
             roi.set_poi_ids(json_dict["poi_ids"][type_], type_)
             roi.set_poi_coords(json_dict["poi_coords"][type_], type_)
             roi.center_range = tuple(json_dict["center_range"])
-            roi.bearing_average = json_dict["bearing_average"]
-            roi.bearing_variance = json_dict["bearing_variance"]
+            roi.bearing_avg = json_dict["bearing_avg"]
+            roi.bearing_std = json_dict["bearing_std"]
         return roi
 
     @staticmethod

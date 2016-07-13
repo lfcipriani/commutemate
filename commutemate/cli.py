@@ -114,14 +114,12 @@ class CommutemateCLI(object):
         # ============== creating ROIs =============== #
         ROIs = clustering.create_ROIs(POIs, labels, set(labels) - set([-1]), self.workspace_folder, self.config.dbscan_eps_in_meters)
 
-        l.info("ROI: center=[lat,lon] range=in meters POIs=[total] ([core] + [non core])")
         for roi_ in ROIs:
-            l.info("ROI: center=[%3.7f,%3.7f] range=%02.3f meters POIs=%3d bea.avg=%3.2f bea.var=%1.5f" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords()), roi_.bearing_average, roi_.bearing_variance))
+            l.info("ROI: center=[% 11.7f,% 11.7f] range=%3d meters POIs=%3d bea.avg=%6.2f bea.std=%6.2f" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords()), roi_.bearing_avg, roi_.bearing_std))
         l.info("Done! There was %d regions of interest detected\nThe data is available at %s" % (len(ROIs), self.workspace_folder))
 
-        l.info("Rendering visualization")
-
         # ============== rendring map =============== #
+        l.info("Rendering visualization")
         o = clustering.render_map(ROIs, POIs, X, labels, self.workspace_folder, self.config.dbscan_eps_in_meters)
 
         l.info("Done!\nThe map visualization is available at %s" % o)
