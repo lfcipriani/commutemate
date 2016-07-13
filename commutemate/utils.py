@@ -67,6 +67,23 @@ def geo_bearing(pointA, pointB):
 
     return compass_bearing
 
+def geo_end_of_bearing(point, bearing, distance):
+    if (type(point) != tuple):
+        raise TypeError("Only tuples are supported as arguments")
+
+    lat    = math.radians(point[0])
+    lon    = math.radians(point[1])
+    brng   = math.radians(bearing)
+    km     = distance / 1000
+    radius = 6372
+
+    lat2 = math.asin(math.sin(lat) * math.cos(km/radius) + 
+            math.cos(lat) * math.sin(km/radius) * math.cos(brng))
+    lon2 = lon + math.atan2(math.sin(brng) * math.sin(km/radius) * math.cos(lat), 
+            math.cos(km/radius) - math.sin(lat) * math.sin(lat2))
+
+    return (math.degrees(lat2), math.degrees(lon2))
+
 # FILE utils
 def full_path(folder):
     return os.path.abspath(os.path.join(os.getcwd(), folder))

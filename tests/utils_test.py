@@ -44,6 +44,16 @@ class TestUtils:
         eq_(round(utils.geo_bearing(b270[0], b270[1])), 270)
         eq_(round(utils.geo_bearing(b[0], b[1])), 0) # going nowhere
 
+    def test_geo_end_of_bearing(self):
+        ride = GpxParser('tests/data/sample_with_stop.gpx').get_ride_from_track()
+        p1 = ride.points[42]
+        p2 = ride.points[43]
+        dist = utils.geo_distance(p1, p2)
+        bearing = utils.geo_bearing((p1.lat, p1.lon), (p2.lat, p2.lon))
+
+        eq_(int(utils.geo_end_of_bearing((p1.lat, p1.lon), bearing, dist)[0] * 1000000), int(p2.lat * 1000000))
+        eq_(int(utils.geo_end_of_bearing((p1.lat, p1.lon), bearing, dist)[1] * 1000000), int(p2.lon * 1000000))
+
     def test_geo_range_from_center(self):
         points = [[-22.007023, -47.895010],[-22.007600, -47.894592],[-22.007608, -47.895222],[-22.006996, -47.894444],[-22.007264, -47.894572],[-22.007299, -47.894703],[-22.007394, -47.894159],[-22.007615, -47.894285]]
         range_ = utils.geo_range_from_center(points)
