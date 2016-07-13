@@ -49,26 +49,39 @@ def render_map(ROIs, POIs, X, labels, output_folder, dbscan_radius):
     black  = '#000000' # noise
     green  = '#0BDE4E' # passes
     red    = '#E84D2A' # stops
-    whitey = '#DDDDDD' # ROI center
+    blue   = '#20B2AA' # ROI center
+    kwargs = {"face_alpha": 0.05}
     unique_labels = set(labels)
     for k in unique_labels:
         class_member_mask = (labels == k) # array of true/false. true if label equal set of label value
 
         if k == -1:
             xy = X[class_member_mask]
-            gmap.scatter(xy[:, 0], xy[:, 1], black, size=int(dbscan_radius), marker=False)
+            gmap.scatter(xy[:, 0], xy[:, 1], black, size=dbscan_radius, marker=False, **kwargs)
+            render_POI_bearing(gmap, POIs[class_member_mask], black, dbscan_radius)
         else:
             xy = numpy.array([[item.point.lat, item.point.lon] for item in POIs[class_member_mask] if item.poi_type == PointOfInterest.TYPE_STOP])
             if len(xy) > 0:
-                gmap.scatter(xy[:, 0], xy[:, 1], red, size=int(dbscan_radius), marker=False)
+                gmap.scatter(xy[:, 0], xy[:, 1], red, size=dbscan_radius, marker=False, **kwargs)
+                render_POI_bearing(gmap, filter(lambda p: p.poi_type == PointOfInterest.TYPE_STOP, POIs[class_member_mask]), black, dbscan_radius)
+
             xy = numpy.array([[item.point.lat, item.point.lon] for item in POIs[class_member_mask] if item.poi_type == PointOfInterest.TYPE_PASS])
             if len(xy) > 0:
-                gmap.scatter(xy[:, 0], xy[:, 1], green, size=int(dbscan_radius), marker=False)
+                gmap.scatter(xy[:, 0], xy[:, 1], green, size=dbscan_radius, marker=False, **kwargs)
+                render_POI_bearing(gmap, filter(lambda p: p.poi_type == PointOfInterest.TYPE_PASS, POIs[class_member_mask]), black, dbscan_radius)
 
     for roi in ROIs:
-        gmap.scatter([roi.center_range[0]],[roi.center_range[1]],whitey, size=roi.center_range[2], marker=False)
+        gmap.scatter([roi.center_range[0]],[roi.center_range[1]],blue, size=roi.center_range[2], marker=False, **kwargs)
 
     o = os.path.join(output_folder,"map.html")
     gmap.draw(o)
 
     return o
+
+def render_POI_bearing(gmap, POIs, color, size):
+    for p in POIs:
+        p1 = (p.point.lat, p.point.lon)
+        p2 = utils.geo_end_of_bearing(p1, p.point.bearing, size)
+        gmap.plot([p1[0], p2[0]], [p1[1], p2[1]], color)
+        gmap.scatter([p2[0]], [p2[1]], color, size=size/10, marker=False)
+
