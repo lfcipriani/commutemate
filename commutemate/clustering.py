@@ -13,8 +13,9 @@ def cluster(X, eps_in_meters, min_samples):
     db = DBSCAN(eps=DB_EPS, min_samples=min_samples, metric='haversine').fit(Y)
     return db
 
-def create_ROIs(POIs, labels, roi_labels, output_folder, min_center_range=0):
+def create_ROIs(POIs, labels, output_folder, min_center_range=0):
     ROIs = []
+    roi_labels = set(labels) - set([-1])
     for k in roi_labels:
         roi_ = RegionOfInterest()
 

@@ -112,7 +112,7 @@ class CommutemateCLI(object):
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
         # ============== creating ROIs =============== #
-        ROIs = clustering.create_ROIs(POIs, labels, set(labels) - set([-1]), self.workspace_folder, self.config.dbscan_eps_in_meters)
+        ROIs = clustering.create_ROIs(POIs, labels, self.workspace_folder, self.config.dbscan_eps_in_meters)
 
         for roi_ in ROIs:
             l.info("ROI: center=[% 11.7f,% 11.7f] range=%3d meters POIs=%3d bea.avg=%6.2f bea.std=%6.2f" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords()), roi_.bearing_avg, roi_.bearing_std))

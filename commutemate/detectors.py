@@ -87,7 +87,6 @@ def detect_passes(ride, ROIs):
                 poi.set_duration(0)
                 poi.set_previous_stop(previous_stop)
                 # TODO only append if point is part of the cluster
-                # TODO update ROI with new POI
                 passes.append(poi)
 
                 on_a_stop     = False
@@ -99,7 +98,6 @@ def detect_passes(ride, ROIs):
     return passes, stats
 
 def __inside_a_ROI(point, ROIs):
-    # TODO use a index to search implement that
     for roi in ROIs:
         if utils.is_inside_range(roi.center_range, point):
             return roi
