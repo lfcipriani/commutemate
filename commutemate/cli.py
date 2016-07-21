@@ -103,12 +103,12 @@ class CommutemateCLI(object):
         l.info("Running DBSCAN with eps=%d meters, min_samples=%d, metric=%s" % (self.config.dbscan_eps_in_meters, self.config.dbscan_min_samples, 'haversine'))
 
         # ============== clustering with dbscan =============== #
-        db = clustering.cluster(X, self.config.dbscan_eps_in_meters, self.config.dbscan_min_samples)
+        db = clustering.cluster_with_bearing_weight(POIs, X, self.config.dbscan_eps_in_meters, self.config.dbscan_min_samples)
 
         l.info("Done!")
         l.info("Creating regions of interest")
 
-        labels = db.labels_
+        labels = db#.labels_
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
         # ============== creating ROIs =============== #

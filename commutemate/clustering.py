@@ -2,6 +2,8 @@ import os
 import datetime
 import numpy, gmplot
 from sklearn.cluster import DBSCAN
+from sklearn.neighbors import DistanceMetric
+from scipy.spatial.distance import pdist, squareform
 import commutemate.utils as utils
 from commutemate.roi import RegionOfInterest, PointOfInterest
 
@@ -12,6 +14,32 @@ def cluster(X, eps_in_meters, min_samples):
     DB_EPS = eps_in_meters / 1000 / 6372 # Haversine outputs without considering Earth radius
     db = DBSCAN(eps=DB_EPS, min_samples=min_samples, metric='haversine').fit(Y)
     return db
+
+def cluster_with_bearing_weight(POIs, X, eps_in_meters, min_samples):
+    distance_function = DistanceMetric.get_metric('haversine')
+    Y = numpy.radians(X) # this is the input of scikit Haversine distance formula
+    distance_matrix = distance_function.pairwise(Y) * 6372 #matrix distance with kilometer units
+
+    weight_matrix = []
+    l = len(POIs)
+    for i in range(0,l):
+        weight_matrix.append([])
+        for j in range(0,l):
+            weight_matrix[i].append(bearing_weight(POIs[i].point.bearing,POIs[j].point.bearing))
+
+    weight_matrix = numpy.array(weight_matrix)
+    distance_matrix += weight_matrix
+    # https://www.wolframalpha.com/input/?i=exp+fit+%7B0,0%7D,%7B(pi%2F4),0%7D,%7B(pi%2F2),0.3%7D,%7B(3*pi%2F4),5%7D
+    # delta = 0 to 45, weight = 0
+    # delta = 45 to 90, weight = ? (maybe a function)
+    # delta = 90 to 180, weight = 1
+
+    DB_EPS = eps_in_meters / 1000 # Haversine outputs without considering Earth radius
+    db = DBSCAN(eps=DB_EPS, min_samples=min_samples, metric='precomputed').fit_predict(distance_matrix)
+    return db
+
+def bearing_weight(brng1, brng2):
+    return 0
 
 def create_ROIs(POIs, labels, output_folder, min_center_range=0):
     ROIs = []
