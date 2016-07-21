@@ -1,6 +1,7 @@
+import copy
 import commutemate.utils as utils
 from commutemate.ride import *
-from commutemate.roi import PointOfInterest
+from commutemate.roi import PointOfInterest, RegionOfInterest
 
 STOPPED_SPEED_KMH_THRESHOLD = 1.5
 
@@ -30,7 +31,9 @@ def detect_stops(ride):
 
     return stops
 
-def detect_passes(ride, ROIs):
+def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
+    import numpy
+    import commutemate.clustering as clustering
     passes        = []
     on_a_stop     = False
     on_a_roi      = False
@@ -43,6 +46,7 @@ def detect_passes(ride, ROIs):
             "# ROIs stop POI": 0, 
             "# ROIs stop without POI": 0, 
             "# ROIs pass": 0,
+            "# ROIs pass but no cluster": 0,
         }
 
     for p in ride.points[1:]:
@@ -81,13 +85,27 @@ def detect_passes(ride, ROIs):
                 current_roi   = None
 
             elif on_a_roi:
-                stats["# ROIs pass"] += 1
                 ppass = pass_buffer[len(pass_buffer)/2] # get buffer mid point as point for POI
+
                 poi   = PointOfInterest(ppass, PointOfInterest.TYPE_PASS, ride.origin, ride.destination)
                 poi.set_duration(0)
                 poi.set_previous_stop(previous_stop)
-                # TODO only append if point is part of the cluster
-                passes.append(poi)
+
+                # need to hydrate ROI to have POIs bearing info
+                RegionOfInterest.hydrate_POIs(current_roi, workspace_folder)
+                current_roi.set_poi_list([poi], PointOfInterest.TYPE_PASS)
+                POIs = numpy.array(current_roi.get_all_pois())
+                X = numpy.array(current_roi.get_all_poi_coords())
+
+                # If pass point is not part of stop cluster, this means that the pass is in another direction
+                db = clustering.cluster_with_bearing_weight(POIs, X, eps_in_meters, min_samples)
+                n_clusters_ = len(set(db))
+
+                if n_clusters_ == 1:
+                    stats["# ROIs pass"] += 1
+                    passes.append(poi)
+                else:
+                    stats["# ROIs pass but no cluster"] += 1
 
                 on_a_stop     = False
                 stop_buffer   = None
@@ -100,5 +118,5 @@ def detect_passes(ride, ROIs):
 def __inside_a_ROI(point, ROIs):
     for roi in ROIs:
         if utils.is_inside_range(roi.center_range, point):
-            return roi
+            return copy.deepcopy(roi)
     return None

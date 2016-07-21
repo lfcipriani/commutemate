@@ -12,7 +12,7 @@ class CommutemateCLI(object):
     
     def __init__(self):
         l.basicConfig(stream=sys.stdout, level=l.DEBUG, format='%(asctime)s(%(levelname)s) - %(message)s')
-        commands = ['detectstops','clusterize','detectpasses']
+        commands = ['detectstops','clusterize','detectpasses','lint']
 
         # Parsing commend line arguments
         parser = OptionParser("usage: %prog COMMAND -i GPX_FOLDER -w WORKSPACE_FOLDER [-c CONFIG.INI]" + 
@@ -151,11 +151,17 @@ class CommutemateCLI(object):
                 "# ROIs stop POI": 0, 
                 "# ROIs stop without POI": 0, 
                 "# ROIs pass": 0,
+                "# ROIs pass but no cluster": 0,
             }
         for gpx in gpx_files:
             ride  = GpxParser(gpx).get_ride_from_track(self.config.region_ignores)
 
-            passes, stats = detect_passes(ride, ROIs)
+            passes, stats = detect_passes(
+                    ride, 
+                    ROIs, 
+                    self.config.dbscan_eps_in_meters, 
+                    self.config.dbscan_min_samples, 
+                    self.workspace_folder)
 
             for k in stats.keys():
                 total_stats[k] += stats[k]
@@ -167,6 +173,29 @@ class CommutemateCLI(object):
 
         l.info("Detection metrics: %s" % total_stats)
         l.info("Done! There was %d passes detected\nThe data is available at %s" % (total, self.workspace_folder))
+
+    def lint(self):
+        # Loading ROIs
+        json_files = []
+        for f in os.listdir(self.workspace_folder):
+            if os.path.basename(f).startswith("roi_") and f.endswith('.json'):
+                json_files.append(os.path.join(self.workspace_folder, f))
+
+        ok = True
+        for jsf in json_files:
+            roi = utils.load_json(jsf, RegionOfInterest)
+            clen = len(roi.get_all_poi_coords())
+            RegionOfInterest.hydrate_POIs(roi, self.workspace_folder)
+            plen = len(roi.get_all_pois())
+            if clen != plen:
+                l.error("Problem with ROI: %s" % jsf)
+                ok = False
+
+        if ok:
+            l.info("All ROIs are OK! \o/")
+        else:
+            l.error("Problem to load ROI may affect the results.")
+
 
 def main():
     CommutemateCLI()
