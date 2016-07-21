@@ -62,6 +62,12 @@ class TestUtils:
         eq_(range_[1],-47.894690499999996)
         eq_(int(range_[2]),64)
 
+    def test_geo_bearing_delta(self):
+        eq_(utils.geo_bearing_delta(2,358),4)
+        eq_(utils.geo_bearing_delta(15,40),25)
+        eq_(utils.geo_bearing_delta(270,90),180)
+        eq_(utils.geo_bearing_delta(300,60),120)
+
     def test_full_path(self):
         cwd = os.getcwd()
         eq_(utils.full_path("testing/this/method.gpx"), cwd + "/testing/this/method.gpx")

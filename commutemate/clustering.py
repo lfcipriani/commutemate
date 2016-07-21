@@ -25,21 +25,26 @@ def cluster_with_bearing_weight(POIs, X, eps_in_meters, min_samples):
     for i in range(0,l):
         weight_matrix.append([])
         for j in range(0,l):
-            weight_matrix[i].append(bearing_weight(POIs[i].point.bearing,POIs[j].point.bearing))
+            weight_matrix[i].append(bearing_weight(POIs[i].point.bearing,POIs[j].point.bearing, eps_in_meters))
 
     weight_matrix = numpy.array(weight_matrix)
     distance_matrix += weight_matrix
-    # https://www.wolframalpha.com/input/?i=exp+fit+%7B0,0%7D,%7B(pi%2F4),0%7D,%7B(pi%2F2),0.3%7D,%7B(3*pi%2F4),5%7D
-    # delta = 0 to 45, weight = 0
-    # delta = 45 to 90, weight = ? (maybe a function)
-    # delta = 90 to 180, weight = 1
 
     DB_EPS = eps_in_meters / 1000 # Haversine outputs without considering Earth radius
     db = DBSCAN(eps=DB_EPS, min_samples=min_samples, metric='precomputed').fit_predict(distance_matrix)
     return db
 
-def bearing_weight(brng1, brng2):
-    return 0
+def bearing_weight(brng1, brng2, radius):
+    delta = utils.geo_bearing_delta(brng1, brng2)
+    weight = 0
+    if delta > 45:
+        # If points have delta bearing larger than 45, 
+        # apply a weight to distance acoording to this linear function
+        # this will avoid points with very different bearing to be part of same cluster
+        # this function can be tuned according to your needs
+        # https://www.wolframalpha.com/input/?i=linear+fit+%7B45,0.3%7D,%7B90,1%7D
+        weight = (0.0155556 * delta - 0.4) * radius 
+    return weight
 
 def create_ROIs(POIs, labels, output_folder, min_center_range=0):
     ROIs = []

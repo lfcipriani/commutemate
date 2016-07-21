@@ -84,6 +84,10 @@ def geo_end_of_bearing(point, bearing, distance):
 
     return (math.degrees(lat2), math.degrees(lon2))
 
+def geo_bearing_delta(brng1, brng2):
+    diff  = brng1 - brng2
+    return abs((diff + 180) % 360 - 180)
+
 # FILE utils
 def full_path(folder):
     return os.path.abspath(os.path.join(os.getcwd(), folder))
