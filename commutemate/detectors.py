@@ -85,24 +85,32 @@ def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
                 current_roi   = None
 
             elif on_a_roi:
-                ppass = pass_buffer[len(pass_buffer)/2] # get buffer mid point as point for POI
+                pass_in_cluster = []
 
-                poi   = PointOfInterest(ppass, PointOfInterest.TYPE_PASS, ride.origin, ride.destination)
-                poi.set_duration(0)
-                poi.set_previous_stop(previous_stop)
+                # check from all the points inside a ROI which ones are inside the original cluster
+                for ppass in pass_buffer:
+                    poi   = PointOfInterest(ppass, PointOfInterest.TYPE_PASS, ride.origin, ride.destination)
+                    poi.set_duration(0)
+                    poi.set_previous_stop(previous_stop)
 
-                # need to hydrate ROI to have POIs bearing info
-                RegionOfInterest.hydrate_POIs(current_roi, workspace_folder)
-                current_roi.set_poi_list([poi], PointOfInterest.TYPE_PASS)
-                POIs = numpy.array(current_roi.get_all_pois())
-                X = numpy.array(current_roi.get_all_poi_coords())
+                    # need to hydrate ROI to have POIs bearing info
+                    RegionOfInterest.hydrate_POIs(current_roi, workspace_folder)
+                    current_roi.set_poi_list([poi], PointOfInterest.TYPE_PASS)
+                    POIs = numpy.array(current_roi.get_all_pois())
+                    X = numpy.array(current_roi.get_all_poi_coords())
 
-                # If pass point is not part of stop cluster, this means that the pass is in another direction
-                db = clustering.cluster_with_bearing_weight(POIs, X, eps_in_meters, min_samples)
-                n_clusters_ = len(set(db))
+                    # If pass point is not part of stop cluster, this means that the pass is in another direction
+                    db = clustering.cluster_with_bearing_weight(POIs, X, eps_in_meters, min_samples)
+                    n_clusters_ = len(set(db))
 
-                if n_clusters_ == 1:
+                    if n_clusters_ == 1:
+                        pass_in_cluster.append(poi)
+
+                    current_roi.set_poi_list([], PointOfInterest.TYPE_PASS)
+
+                if len(pass_in_cluster) > 0:
                     stats["# ROIs pass"] += 1
+                    poi = pass_in_cluster[len(pass_in_cluster)/2] # get buffer mid point as point for POI
                     passes.append(poi)
                 else:
                     stats["# ROIs pass but no cluster"] += 1
