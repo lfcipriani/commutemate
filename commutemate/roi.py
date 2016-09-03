@@ -15,7 +15,8 @@ class PointOfInterest(object):
         self.origin = origin
         self.destination = destination
         self.previous_stop = None
-        self.speed_since_previous_stop = 0
+        self.previous_stop_ROI = None
+        self.previous_pass_ROI = None
         self.duration = 0
         self.__generate_id()
 
@@ -31,12 +32,6 @@ class PointOfInterest(object):
         self.duration = duration
 
     def set_previous_stop(self, poi):
-        if poi != None:
-            timedelta = self.point.time - poi.point.time
-            distance  = utils.geo_distance(self.point, poi.point)
-
-            self.speed_since_previous_stop = utils.geo_speed(distance, timedelta)
-
         self.previous_stop = poi.id if poi else None
 
     def to_dict(self):
@@ -47,7 +42,8 @@ class PointOfInterest(object):
             "origin": self.origin.to_dict(),
             "destination": self.destination.to_dict(),
             "previous_stop": self.previous_stop,
-            "speed_since_previous_stop": self.speed_since_previous_stop,
+            "previous_stop_ROI": self.previous_stop_ROI,
+            "previous_pass_ROI": self.previous_pass_ROI,
             "duration": self.duration
         }
         return js
@@ -64,7 +60,8 @@ class PointOfInterest(object):
                     GeoPoint.from_dict(json_dict["destination"]))
         poi.duration                  = json_dict["duration"]
         poi.previous_stop             = json_dict["previous_stop"]
-        poi.speed_since_previous_stop = json_dict["speed_since_previous_stop"]
+        poi.previous_stop_ROI         = json_dict["previous_stop_ROI"]
+        poi.previous_pass_ROI         = json_dict["previous_pass_ROI"]
         return poi
 
     @staticmethod
@@ -76,7 +73,6 @@ class PointOfInterest(object):
         s = "PointOfInterest("
         s += "poi_type=%s, " % (self.poi_type)
         s += "point=%s, " % (self.point.__str__())
-        s += "speed_since_previous_stop=%2.6f kmh, " % (self.speed_since_previous_stop)
         s += "duration=%d)" % (self.duration)
         return s
 

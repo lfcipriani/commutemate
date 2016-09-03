@@ -5,24 +5,16 @@ from commutemate.roi import PointOfInterest, RegionOfInterest
 
 class TestPOI:
 
-    def test_average_speed_since_previous(self):
-        ride = GpxParser('tests/data/sample_with_stop.gpx').get_ride_from_track()
-        stop_POIs = detect_stops(ride)
-
-        eq_(int(stop_POIs[2].speed_since_previous_stop), 18)
-        eq_(stop_POIs[2].duration, 19)
-        eq_(stop_POIs[2].previous_stop, 'e341decc40fa755c4a1f40792052fcb8')
-        eq_(stop_POIs[2].poi_type, PointOfInterest.TYPE_STOP)
-
     def test_poi_json_serialization(self):
         ride = GpxParser('tests/data/sample_with_stop.gpx').get_ride_from_track()
         stop_POIs = detect_stops(ride)
         js = stop_POIs[2].to_JSON()
         stop_POI = PointOfInterest.from_JSON(js)
 
-        eq_(int(stop_POI.speed_since_previous_stop), 18)
         eq_(stop_POI.duration, 19)
         eq_(stop_POI.previous_stop, 'e341decc40fa755c4a1f40792052fcb8')
+        eq_(stop_POI.previous_stop_ROI, None)
+        eq_(stop_POI.previous_pass_ROI, None)
         eq_(stop_POI.poi_type, PointOfInterest.TYPE_STOP)
 
 class TestROI:
