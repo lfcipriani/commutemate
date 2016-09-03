@@ -1,4 +1,4 @@
-import sys, os, math
+import sys, os, math, json, re
 import datetime
 import logging as l
 from optparse import OptionParser
@@ -6,13 +6,14 @@ from commutemate.roi import PointOfInterest, RegionOfInterest
 from commutemate.config import Config
 from commutemate.gpx_parser import GpxParser
 from commutemate.detectors import detect_stops, detect_passes
+from commutemate.metrics import Metrics
 import commutemate.utils as utils
 
 class CommutemateCLI(object):
     
     def __init__(self):
         l.basicConfig(stream=sys.stdout, level=l.DEBUG, format='%(asctime)s(%(levelname)s) - %(message)s')
-        commands = ['detectstops','clusterize','detectpasses','lint']
+        commands = ['detectstops','clusterize','detectpasses','lint','generatemetrics']
 
         # Parsing commend line arguments
         parser = OptionParser("usage: %prog COMMAND -i GPX_FOLDER -w WORKSPACE_FOLDER [-c CONFIG.INI]" + 
@@ -25,6 +26,9 @@ class CommutemateCLI(object):
         parser.add_option("-c", "--config",
                         action="store", dest="config", 
                         help="config file (optional)")
+        parser.add_option("-r", "--roiversion",
+                        action="store", dest="roiversion", 
+                        help="ROI version (for generating metrics only)")
         (options, args) = parser.parse_args()
 
         # Validating arguments
@@ -53,6 +57,11 @@ class CommutemateCLI(object):
                 parser.error("specified config file does not exist")
             else:
                 self.config = Config(self.config)
+
+        if command == "generatemetrics":
+            if not options.roiversion:
+                parser.error("you need to pass a ROI version such as 20160903_150406 (extracted from roi_20160903_150406_38.json)")
+            self.roi_version = options.roiversion
 
         l.info(self.config.__str__())
 
@@ -173,6 +182,27 @@ class CommutemateCLI(object):
 
         l.info("Detection metrics: %s" % total_stats)
         l.info("Done! There was %d passes detected\nThe data is available at %s" % (total, self.workspace_folder))
+
+    def generatemetrics(self):
+        # Loading ROIs
+        json_files = []
+        for f in os.listdir(self.workspace_folder):
+            if os.path.basename(f).startswith("roi_" + self.roi_version) and f.endswith('.json'):
+                json_files.append(os.path.join(self.workspace_folder, f))
+
+        ROIs = {} 
+        pattern = re.compile("roi_(\d+_\d+_\d+)\.")
+        for jsf in json_files:
+            roi = utils.load_json(jsf, RegionOfInterest)
+            ROIs[pattern.search(jsf).group(1)] = roi
+        l.info("Loaded %d ROIs." % len(json_files))
+        l.info("Generating metrics...")
+
+        obj = Metrics(ROIs, self.workspace_folder).generate()
+
+        output = os.path.join(self.workspace_folder, "metrics.json")
+        utils.save_json(os.path.join(output), json.dumps(obj, indent=4))
+        l.info("Done! The metrics are available at %s" % output)
 
     def lint(self):
         # Loading ROIs
