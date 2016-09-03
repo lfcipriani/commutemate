@@ -1,4 +1,4 @@
-import copy
+import copy, os
 import commutemate.utils as utils
 from commutemate.ride import *
 from commutemate.roi import PointOfInterest, RegionOfInterest
@@ -34,13 +34,18 @@ def detect_stops(ride):
 def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
     import numpy
     import commutemate.clustering as clustering
-    passes        = []
+
+    stops         = []
     on_a_stop     = False
-    on_a_roi      = False
     stop_buffer   = None
-    pass_buffer   = []
     previous_stop = None
+
+    passes        = []
+    on_a_roi      = False
+    pass_buffer   = []
     current_roi   = None
+    previous_pass = None
+
     stats = {
             "# ROIs entered": 0,
             "# ROIs stop POI": 0, 
@@ -73,6 +78,11 @@ def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
             if on_a_stop:
                 poi = PointOfInterest(stop_buffer, PointOfInterest.TYPE_STOP, ride.origin, ride.destination)
                 if current_roi.is_poi_included(poi.id):
+                    # Updating POI with preivous ROIs info
+                    poi = utils.load_json(os.path.join(workspace_folder, "poi_%s.json" % poi.id), PointOfInterest)
+                    poi.previous_stop_ROI = previous_stop.id if previous_stop else None
+                    poi.previous_pass_ROI = previous_pass.id if previous_pass else None
+                    utils.save_json(os.path.join(workspace_folder, "poi_%s.json" % poi.id), poi.to_JSON())
                     previous_stop = poi
                     stats["# ROIs stop POI"] += 1
                 else:
@@ -92,6 +102,8 @@ def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
                     poi   = PointOfInterest(ppass, PointOfInterest.TYPE_PASS, ride.origin, ride.destination)
                     poi.set_duration(0)
                     poi.set_previous_stop(previous_stop)
+                    poi.previous_stop_ROI = previous_stop.id if previous_stop else None
+                    poi.previous_pass_ROI = previous_pass.id if previous_pass else None
 
                     # need to hydrate ROI to have POIs bearing info
                     RegionOfInterest.hydrate_POIs(current_roi, workspace_folder)
@@ -109,8 +121,10 @@ def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
                     current_roi.set_poi_list([], PointOfInterest.TYPE_PASS)
 
                 if len(pass_in_cluster) > 0:
+                    # we have officially a pass, the crowd goes crazy
                     stats["# ROIs pass"] += 1
                     poi = pass_in_cluster[len(pass_in_cluster)/2] # get buffer mid point as point for POI
+                    previous_pass = poi
                     passes.append(poi)
                 else:
                     stats["# ROIs pass but no cluster"] += 1
