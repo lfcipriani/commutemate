@@ -16,11 +16,17 @@ class TestConfig:
         eq_(c.region_ignores[1][2], 200)
         eq_(c.dbscan_eps_in_meters, 7)
         eq_(c.dbscan_min_samples, 4)
+        eq_(c.stops_cap_durations_at, 120)
 
     def test_empty_region_ignores(self):
         c = Config('tests/data/config_test_no_ignore.ini')
 
         eq_(len(c.region_ignores), 0)
+
+    def test_empty_stops_cap_duration_at(self):
+        c = Config('tests/data/config_test_no_ignore.ini')
+
+        eq_(c.stops_cap_durations_at, None)
 
     def test_default_config(self):
         c = Config()
@@ -28,3 +34,4 @@ class TestConfig:
         eq_(len(c.region_ignores), 0)
         eq_(c.dbscan_eps_in_meters, 7)
         eq_(c.dbscan_min_samples, 4)
+        eq_(c.stops_cap_durations_at, None)
