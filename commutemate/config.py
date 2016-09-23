@@ -42,5 +42,5 @@ class Config(object):
 
     def __str__(self):
         rg = [reg.__str__() for reg in self.region_ignores]
-        return "Config loaded from: %s\n  - regions_ignore: %s\n  - dbscan_eps_in_meters: %d\n  - dbscan_min_samples: %d\n  - stops_cap_durations_at: %d" % (self.filename, ",".join(rg), self.dbscan_eps_in_meters, self.dbscan_min_samples, self.stops_cap_durations_at)
+        return "Config loaded from: %s\n  - regions_ignore: %s\n  - dbscan_eps_in_meters: %d\n  - dbscan_min_samples: %d\n  - stops_cap_durations_at: %s" % (self.filename, ",".join(rg), self.dbscan_eps_in_meters, self.dbscan_min_samples, self.stops_cap_durations_at)
 
