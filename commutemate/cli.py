@@ -80,7 +80,7 @@ class CommutemateCLI(object):
         for gpx in gpx_files:
             ride  = GpxParser(gpx).get_ride_from_track(self.config.region_ignores)
 
-            stops = detect_stops(ride)
+            stops = detect_stops(ride, self.config.stops_cap_durations_at)
 
             stop_count = len(stops)
             total += stop_count
