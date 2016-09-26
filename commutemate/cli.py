@@ -1,6 +1,6 @@
 import sys, os, math, json, re
 import datetime
-import logging as l
+import logging
 from optparse import OptionParser
 from commutemate.roi import PointOfInterest, RegionOfInterest
 from commutemate.config import Config
@@ -12,7 +12,8 @@ import commutemate.utils as utils
 class CommutemateCLI(object):
     
     def __init__(self):
-        l.basicConfig(stream=sys.stdout, level=l.DEBUG, format='%(asctime)s(%(levelname)s) - %(message)s')
+        self.__setup_logging()
+
         commands = ['detectstops','clusterize','detectpasses','lint','generatemetrics']
 
         # Parsing commend line arguments
@@ -63,7 +64,7 @@ class CommutemateCLI(object):
                 parser.error("you need to pass a ROI version such as 20160903_150406 (extracted from roi_20160903_150406_38.json)")
             self.roi_version = options.roiversion
 
-        l.info(self.config.__str__())
+        self.l.info(self.config.__str__())
 
         getattr(self,command)()
 
@@ -73,8 +74,9 @@ class CommutemateCLI(object):
         for f in os.listdir(self.gpx_folder):
             if f.endswith('.gpx'):
                 gpx_files.append(os.path.join(self.gpx_folder, f))
-        l.info("There's %d gpx files to be proccessed. Starting now..." % len(gpx_files))
+        self.l.info("There's %d gpx files to be proccessed. Starting now..." % len(gpx_files))
 
+        self.csv.info("\n--CSV--\nride_file, distance, duration, moving_time, stop_time, stop_count, stops_duration")
         # Detecting Stops and storing Points of Interest
         total = 0
         for gpx in gpx_files:
@@ -88,7 +90,8 @@ class CommutemateCLI(object):
             for s in stops:
                 utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % s.id), s.to_JSON())
 
-        l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.workspace_folder))
+        self.csv.info("\n--CSV--\n")
+        self.l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.workspace_folder))
 
     def clusterize(self):
         import numpy
@@ -98,7 +101,7 @@ class CommutemateCLI(object):
         for f in os.listdir(self.workspace_folder):
             if os.path.basename(f).startswith("poi_") and f.endswith('.json'):
                 json_files.append(os.path.join(self.workspace_folder, f))
-        l.info("There's %d POI(s) to be clusterized. Preparing data..." % len(json_files))
+        self.l.info("There's %d POI(s) to be clusterized. Preparing data..." % len(json_files))
 
         geo_coords = []
         POIs = []
@@ -109,13 +112,13 @@ class CommutemateCLI(object):
         POIs = numpy.array(POIs)
         X = numpy.array(geo_coords)
 
-        l.info("Running DBSCAN with eps=%d meters, min_samples=%d, metric=%s" % (self.config.dbscan_eps_in_meters, self.config.dbscan_min_samples, 'haversine'))
+        self.l.info("Running DBSCAN with eps=%d meters, min_samples=%d, metric=%s" % (self.config.dbscan_eps_in_meters, self.config.dbscan_min_samples, 'haversine'))
 
         # ============== clustering with dbscan =============== #
         db = clustering.cluster_with_bearing_weight(POIs, X, self.config.dbscan_eps_in_meters, self.config.dbscan_min_samples)
 
-        l.info("Done!")
-        l.info("Creating regions of interest")
+        self.l.info("Done!")
+        self.l.info("Creating regions of interest")
 
         labels = db#.labels_
         n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
@@ -124,14 +127,14 @@ class CommutemateCLI(object):
         ROIs = clustering.create_ROIs(POIs, labels, self.workspace_folder, self.config.dbscan_eps_in_meters)
 
         for roi_ in ROIs:
-            l.info("ROI: center=[% 11.7f,% 11.7f] range=%3d meters POIs=%3d bea.avg=%6.2f bea.std=%6.2f" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords()), roi_.bearing_avg, roi_.bearing_std))
-        l.info("Done! There was %d regions of interest detected\nThe data is available at %s" % (len(ROIs), self.workspace_folder))
+            self.csv.info("ROI: center=[% 11.7f,% 11.7f] range=%3d meters POIs=%3d bea.avg=%6.2f bea.std=%6.2f" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords()), roi_.bearing_avg, roi_.bearing_std))
+        self.l.info("Done! There was %d regions of interest detected\nThe data is available at %s" % (len(ROIs), self.workspace_folder))
 
         # ============== rendring map =============== #
-        l.info("Rendering visualization")
+        self.l.info("Rendering visualization")
         o = clustering.render_map(ROIs, POIs, X, labels, self.workspace_folder, self.config.dbscan_eps_in_meters)
 
-        l.info("Done!\nThe map visualization is available at %s" % o)
+        self.l.info("Done!\nThe map visualization is available at %s" % o)
 
     def detectpasses(self):
         # Getting all gpx files in specified folder
@@ -139,7 +142,7 @@ class CommutemateCLI(object):
         for f in os.listdir(self.gpx_folder):
             if f.endswith('.gpx'):
                 gpx_files.append(os.path.join(self.gpx_folder, f))
-        l.info("There's %d gpx files to be proccessed." % len(gpx_files))
+        self.l.info("There's %d gpx files to be proccessed." % len(gpx_files))
 
         # Loading ROIs
         json_files = []
@@ -151,7 +154,7 @@ class CommutemateCLI(object):
         for jsf in json_files:
             roi = utils.load_json(jsf, RegionOfInterest)
             ROIs.append(roi)
-        l.info("Loaded %d ROIs." % len(json_files))
+        self.l.info("Loaded %d ROIs." % len(json_files))
 
         # Detecting Passes and storing Points of Interest
         total = 0
@@ -176,12 +179,12 @@ class CommutemateCLI(object):
                 total_stats[k] += stats[k]
             passes_count = len(passes)
             total += passes_count
-            l.info("%s: %d passe(s) detected" % (os.path.basename(gpx), passes_count))
+            self.l.info("%s: %d passe(s) detected" % (os.path.basename(gpx), passes_count))
             for p in passes:
                 utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % p.id), p.to_JSON())
 
-        l.info("Detection metrics: %s" % total_stats)
-        l.info("Done! There was %d passes detected\nThe data is available at %s" % (total, self.workspace_folder))
+        self.l.info("Detection metrics: %s" % total_stats)
+        self.l.info("Done! There was %d passes detected\nThe data is available at %s" % (total, self.workspace_folder))
 
     def generatemetrics(self):
         # Loading ROIs
@@ -195,14 +198,14 @@ class CommutemateCLI(object):
         for jsf in json_files:
             roi = utils.load_json(jsf, RegionOfInterest)
             ROIs[pattern.search(jsf).group(1)] = roi
-        l.info("Loaded %d ROIs." % len(json_files))
-        l.info("Generating metrics...")
+        self.l.info("Loaded %d ROIs." % len(json_files))
+        self.l.info("Generating metrics...")
 
         obj = Metrics(ROIs, self.workspace_folder).generate()
 
         output = os.path.join(self.workspace_folder, "metrics.json")
         utils.save_json(os.path.join(output), json.dumps(obj, indent=4))
-        l.info("Done! The metrics are available at %s" % output)
+        self.l.info("Done! The metrics are available at %s" % output)
 
     def lint(self):
         # Loading ROIs
@@ -218,14 +221,28 @@ class CommutemateCLI(object):
             RegionOfInterest.hydrate_POIs(roi, self.workspace_folder)
             plen = len(roi.get_all_pois())
             if clen != plen:
-                l.error("Problem with ROI: %s" % jsf)
+                self.l.info("Problem with ROI: %s" % jsf)
                 ok = False
 
         if ok:
-            l.info("All ROIs are OK! \o/")
+            self.l.info("All ROIs are OK! \o/")
         else:
-            l.error("Problem to load ROI may affect the results.")
+            self.l.info("Problem to load ROI may affect the results.")
 
+    def __setup_logging(self):
+        self.l = logging.getLogger("info")
+        self.l.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter('%(asctime)s(%(levelname)s) - %(message)s'))
+        self.l.addHandler(handler)
+
+        self.csv = logging.getLogger("csv")
+        self.csv.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter('%(message)s'))
+        self.csv.addHandler(handler)
 
 def main():
     CommutemateCLI()
