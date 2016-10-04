@@ -76,9 +76,10 @@ class CommutemateCLI(object):
                 gpx_files.append(os.path.join(self.gpx_folder, f))
         self.l.info("There's %d gpx files to be proccessed. Starting now..." % len(gpx_files))
 
-        self.csv.info("\n--CSV--\nride_file, distance_meters, duration_seconds, moving_time, stop_time, stop_count, stop_duration_list")
+        self.csv.info("\n--CSV-Ride-data--\nride_file, distance_meters, duration_seconds, moving_time, stop_time, stop_count, stop_duration_list")
         # Detecting Stops and storing Points of Interest
         total = 0
+        stop_durations = []
         for gpx in gpx_files:
             ride  = GpxParser(gpx).get_ride_from_track(self.config.region_ignores)
 
@@ -89,6 +90,7 @@ class CommutemateCLI(object):
 
             ride.duration     -= ignored_time
             stop_duration_list = [s.duration for s in stops]
+            stop_durations    += stop_duration_list
             stop_time          = sum(stop_duration_list)
             stop_count         = len(stops)
             moving_time        = ride.duration - stop_time
@@ -101,7 +103,10 @@ class CommutemateCLI(object):
                                       stop_count,
                                       " ".join(map(str, stop_duration_list))))
 
-        self.csv.info("\n--CSV--\n")
+        self.csv.info("--CSV--\n")
+        self.csv.info("\n--CSV-stop-durations--")
+        self.csv.info(",".join(map(str, stop_durations))) 
+        self.csv.info("--CSV--\n")
         self.l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.workspace_folder))
 
     def clusterize(self):
