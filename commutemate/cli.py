@@ -76,19 +76,30 @@ class CommutemateCLI(object):
                 gpx_files.append(os.path.join(self.gpx_folder, f))
         self.l.info("There's %d gpx files to be proccessed. Starting now..." % len(gpx_files))
 
-        self.csv.info("\n--CSV--\nride_file, distance, duration, moving_time, stop_time, stop_count, stops_duration")
+        self.csv.info("\n--CSV--\nride_file, distance_meters, duration_seconds, moving_time, stop_time, stop_count, stop_duration_list")
         # Detecting Stops and storing Points of Interest
         total = 0
         for gpx in gpx_files:
             ride  = GpxParser(gpx).get_ride_from_track(self.config.region_ignores)
 
-            stops = detect_stops(ride, self.config.stops_cap_durations_at)
+            stops, ignored_time = detect_stops(ride, self.config.stops_cap_durations_at)
 
-            stop_count = len(stops)
-            total += stop_count
-            l.info("%s: %d stop(s) detected" % (os.path.basename(gpx), stop_count))
             for s in stops:
                 utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % s.id), s.to_JSON())
+
+            ride.duration     -= ignored_time
+            stop_duration_list = [s.duration for s in stops]
+            stop_time          = sum(stop_duration_list)
+            stop_count         = len(stops)
+            moving_time        = ride.duration - stop_time
+            total             += stop_count
+            self.csv.info("%s,%8.2f,%5d,%5d,%5d,%3d,%s" % (os.path.basename(gpx), 
+                                      ride.distance,
+                                      ride.duration,
+                                      moving_time,
+                                      stop_time,
+                                      stop_count,
+                                      " ".join(map(str, stop_duration_list))))
 
         self.csv.info("\n--CSV--\n")
         self.l.info("Done! There was %d stops detected\nThe data is available at %s" % (total, self.workspace_folder))

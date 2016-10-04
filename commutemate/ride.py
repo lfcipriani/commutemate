@@ -46,6 +46,8 @@ class Ride(object):
 
     def __init__(self, origin=None, destination=None):
         self.points = []
+        self.distance = 0
+        self.duration = 0
         if origin:
             self.set_origin(origin)
         if destination:

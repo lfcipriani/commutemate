@@ -11,6 +11,7 @@ def detect_stops(ride, stop_duration_cap = None):
     duration      = 0
     stop_buffer   = None
     previous_stop = None
+    ignored_time  = 0
 
     for p in ride.points[1:]:
         if p.speed < STOPPED_SPEED_KMH_THRESHOLD:
@@ -21,6 +22,7 @@ def detect_stops(ride, stop_duration_cap = None):
             if on_a_stop:
                 poi = PointOfInterest(stop_buffer, PointOfInterest.TYPE_STOP, ride.origin, ride.destination)
                 if stop_duration_cap and duration > stop_duration_cap:
+                    ignored_time += (duration - stop_duration_cap)
                     duration = stop_duration_cap
                 poi.set_duration(duration)
                 poi.set_previous_stop(previous_stop)
@@ -31,7 +33,7 @@ def detect_stops(ride, stop_duration_cap = None):
                 stop_buffer   = None
                 previous_stop = poi
 
-    return stops
+    return stops, ignored_time
 
 def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
     import numpy

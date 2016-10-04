@@ -12,6 +12,8 @@ class GpxParser(object):
     def get_ride_from_track(self, region_ignores=[]):
         self.region_ignores = region_ignores
         previous_point = None
+        total_distance = 0
+        total_duration = 0
         ride = Ride()
         orig = None
         dest = None
@@ -34,6 +36,9 @@ class GpxParser(object):
                     distance  = utils.geo_distance(point, previous)
                     speed_kmh = utils.geo_speed(distance, timedelta)
                     bearing   = utils.geo_bearing((point.latitude,point.longitude), (next_point.latitude,next_point.longitude)) 
+                    
+                    total_duration += gpxpy.utils.total_seconds(timedelta)
+                    total_distance += distance
 
                     ride.add_point(
                             GeoPoint(point.latitude, 
@@ -48,6 +53,8 @@ class GpxParser(object):
 
         ride.set_origin(GeoPoint(orig.latitude, orig.longitude, orig.elevation, 0, 0, orig.time, 0))
         ride.set_destination(GeoPoint(dest.latitude, dest.longitude, dest.elevation, 0, 0, dest.time, 0))
+        ride.distance = total_distance
+        ride.duration = total_duration
         return ride
 
     def __should_ignore(self, point):
