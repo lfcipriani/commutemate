@@ -142,8 +142,17 @@ class CommutemateCLI(object):
         # ============== creating ROIs =============== #
         ROIs = clustering.create_ROIs(POIs, labels, self.workspace_folder, self.config.dbscan_eps_in_meters)
 
+        self.csv.info("\n--CSV-ROI-data--\ncenter_lat, center_long, range_meters, POI_count, bearing_avg, bearing_std")
+
         for roi_ in ROIs:
-            self.csv.info("ROI: center=[% 11.7f,% 11.7f] range=%3d meters POIs=%3d bea.avg=%6.2f bea.std=%6.2f" % (roi_.center_range[0], roi_.center_range[1], roi_.center_range[2], len(roi_.get_all_poi_coords()), roi_.bearing_avg, roi_.bearing_std))
+            self.csv.info("%11.7f,%11.7f,%3d,%3d,%6.2f,%6.2f" % (roi_.center_range[0], 
+                                                                 roi_.center_range[1], 
+                                                                 roi_.center_range[2], 
+                                                                 len(roi_.get_all_poi_coords()), 
+                                                                 roi_.bearing_avg, 
+                                                                 roi_.bearing_std))
+
+        self.csv.info("--CSV--\n")
         self.l.info("Done! There was %d regions of interest detected\nThe data is available at %s" % (len(ROIs), self.workspace_folder))
 
         # ============== rendring map =============== #
@@ -180,7 +189,10 @@ class CommutemateCLI(object):
                 "# ROIs stop without POI": 0, 
                 "# ROIs pass": 0,
                 "# ROIs pass but no cluster": 0,
+                "pass_speed_list": []
             }
+        self.csv.info("\n--CSV-passes-data--\nride_file, ROI_in, ROI_stop_POI, ROI_stop_no_POI, ROI_pass_outside_cluster, ROI_pass, pass_speed_list")
+
         for gpx in gpx_files:
             ride  = GpxParser(gpx).get_ride_from_track(self.config.region_ignores)
 
@@ -195,11 +207,21 @@ class CommutemateCLI(object):
                 total_stats[k] += stats[k]
             passes_count = len(passes)
             total += passes_count
-            self.l.info("%s: %d passe(s) detected" % (os.path.basename(gpx), passes_count))
+            self.csv.info("%s,%3d,%3d,%3d,%3d,%3d,%s" % (os.path.basename(gpx),
+                                                         stats["# ROIs entered"],
+                                                         stats["# ROIs stop POI"],
+                                                         stats["# ROIs stop without POI"],
+                                                         stats["# ROIs pass but no cluster"],
+                                                         passes_count,
+                                                         " ".join(map(str,stats['pass_speed_list'])))) 
+
             for p in passes:
                 utils.save_json(os.path.join(self.workspace_folder, "poi_%s.json" % p.id), p.to_JSON())
 
-        self.l.info("Detection metrics: %s" % total_stats)
+        self.csv.info("--CSV--\n")
+        self.csv.info("\n--CSV-pass-speeds--")
+        self.csv.info(",".join(map(str,total_stats['pass_speed_list']))) 
+        self.csv.info("--CSV--\n")
         self.l.info("Done! There was %d passes detected\nThe data is available at %s" % (total, self.workspace_folder))
 
     def generatemetrics(self):

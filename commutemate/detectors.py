@@ -56,6 +56,7 @@ def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
             "# ROIs stop without POI": 0, 
             "# ROIs pass": 0,
             "# ROIs pass but no cluster": 0,
+            "pass_speed_list": []
         }
 
     for p in ride.points[1:]:
@@ -128,6 +129,7 @@ def detect_passes(ride, ROIs, eps_in_meters, min_samples, workspace_folder):
                     # we have officially a pass, the crowd goes crazy
                     stats["# ROIs pass"] += 1
                     poi = pass_in_cluster[len(pass_in_cluster)/2] # get buffer mid point as point for POI
+                    stats["pass_speed_list"].append(poi.point.speed)
                     previous_pass = poi
                     passes.append(poi)
                 else:
