@@ -7,7 +7,7 @@ class TestDetectors:
 
     def test_detect_stops(self):
         ride = GpxParser('tests/data/sample_with_stop.gpx').get_ride_from_track()
-        stop_POIs = detect_stops(ride)
+        stop_POIs, ignored_time = detect_stops(ride)
 
         eq_(len(stop_POIs),4)
         eq_(stop_POIs[0].poi_type, PointOfInterest.TYPE_STOP)

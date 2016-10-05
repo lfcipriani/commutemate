@@ -7,7 +7,7 @@ class TestPOI:
 
     def test_poi_json_serialization(self):
         ride = GpxParser('tests/data/sample_with_stop.gpx').get_ride_from_track()
-        stop_POIs = detect_stops(ride)
+        stop_POIs, ignored_time = detect_stops(ride)
         js = stop_POIs[2].to_JSON()
         stop_POI = PointOfInterest.from_JSON(js)
 
